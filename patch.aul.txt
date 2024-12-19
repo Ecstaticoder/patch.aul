@@ -2,7 +2,7 @@ patch.aul r43beta1
 © 2021-2023 ePi
 https://scrapbox.io/ePi5131/patch.aul
 
-patch.aul r43_ss_65
+patch.aul r43_ss_66
 https://scrapbox.io/nazosauna/patch.aul
 
 概要
@@ -193,7 +193,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・動画ファイルオブジェクトを削除してもハンドルを閉じないように変更
     ・同じ動画に対して動画ファイルのハンドルを共有させるように変更(Altを押しながら読み込ませるときは無効)
     ・動画ファイル・音声ファイル・音声波形表示オブジェクトの初期値設定ファイル(.exc)に存在しないファイルが登録されている場合は読み込みを行わないように変更
-    ・グリッド野設定にて基準フレーム番号に負の値を入力できるように変更
+    ・グリッドの設定にて基準フレーム番号に負の値を入力できるように変更
     ・画像データのキャッシュのサイズをページ単位になるように広げる
     ・モーションブラーにて間隔が0未満の時にエラーが出るのを修正
     ・32bitRGBAの画像に透明度が必要無い場合、24bitRGBに変換して使用キャッシュを25%削減する
@@ -208,6 +208,8 @@ https://scrapbox.io/nazosauna/patch.aul
     ・グループ制御がチェックで無効になっている際にフィルタ効果が実行されるのを修正
     ・中間点オブジェクトを消した際に次の選択がされないことがあるのを修正
     ・オブジェクトを消した際、次に選択されるオブジェクトを変更（左右のオブジェクトより上下を優先）
+    ・メディアオブジェクトで置いたアニメーション効果にて、フィルタ効果を上/下に移動をするとタイムライン上の表示名が正常ではないのを修正
+    ・トラックバー変化方法の加減速移動を長いオブジェクトの中間点で設定すると正常でなくなるのを修正
 
     追加
     ・コンソールの表示
@@ -294,7 +296,8 @@ https://scrapbox.io/nazosauna/patch.aul
             "inactive_col" : [color, color, color], ; アルファチャンネル付きシーン中のフィルタオブジェクト などの灰系のオブジェクトの色 (既定値: [ "606060", "808080", "909090" ])
             "clipping_col" : color, ; 上のオブジェクトでクリッピング(オブジェクト)の色 (既定値: "c04040")
             "clipping_height" : number, ; 上のオブジェクトでクリッピング(オブジェクト)の印の高さ (既定値: -3)
-            "disp_dialog_col" : color, ; 設定ダイアログ表示中のオブジェクトの点線の色 (既定値: "ffffff)
+            "disp_dialog_col" : color, ; 設定ダイアログ表示中のオブジェクトの点線の色 (既定値: "ffffff")
+            "disp_dialog_width" : number, ; 設定ダイアログ表示中のオブジェクトの点線の太さ (既定値: 1)
             "midpt_size" : [number, number, number], ; 中間点の大きさ(レイヤーの高さ大,中,小) (既定値: [4, 3, 3])
             "name_col" : [color, color], ; オブジェクト名の色 ([有効時,無効時] 既定値: [ "ffffff", "a0a0a0" ])
         },
@@ -357,6 +360,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "tra_aviutlfilter" : boolean, ; 拡張編集以外のフィルタのトラックバーにトラックバー変化方法スクリプトを適用していると例外になる問題 (既定値: true)
         "tra_change_drawfilter" : boolean, ; 標準描画-拡張描画-パーティクルの切り替え時にトラックバーの設定値(移動フレーム間隔)が0になるのを修正 (既定値: true)
         "tra_change_mode" : boolean, ; 移動無しから変更するときに右トラックバーの値を左と同じにする (既定値: true)
+        "tra_acc_dec_movement" : boolean, ; トラックバー変化方法の加減速移動を長いオブジェクトの中間点で設定すると正常でなくなるのを修正 (既定値: true)
         "tra_specified_speed" : boolean, ; トラックバー変化方法の移動量指定と時間制御やシーンなどの組み合わせで正常に表示できなくなるのを修正 (既定値: true)
         "text_op_size" : boolean, ; テキストオブジェクトでUTF-16で34バイト以上のフォント名を指定している時、制御文字<s>でサイズのみを指定していると正しい動作をしない (既定値: true)
         "ignore_media_param_reset" : boolean, ; 動画ファイル と 音声ファイル で中間点を打っていないときでもファイルを再参照しても再生位置などの情報を変更しない (既定値: false)
@@ -415,6 +419,7 @@ https://scrapbox.io/nazosauna/patch.aul
 	"any_obj" : boolean, ; Ctrlを押しながら複数選択状態での変更が正しく行われないのを修正 (既定値: true)
 	"object_copy" : boolean, ; タイムラインオブジェクトのコピー情報を共有メモリ化 (既定値: true)
         "paste_pos" : boolean, ; コピーしたタイムラインオブジェクトの貼り付け位置がおかしくなるのを修正 (既定値: true)
+        "swap_filter" : boolean, ; メディアオブジェクトで置いたアニメーション効果のフィルタ効果を上/下に移動をした時にタイムライン上の表示名が正常ではないのを修正 (既定値: true)
         "exclusion_font" : boolean, ; フォント名が32バイト以上の場合、正常に扱うことはできないため表示しないように変更 (既定値: true)
         "init_window_pos" : boolean, ; ウィンドウ位置の初期化で設定ダイアログも動くように変更 (既定値: true)
         "object_table" : boolean, ; 他シーンや1つのレイヤーにオブジェクトの数が多い時にタイムライン操作が重くなるのを改善 (既定値: true)
@@ -484,7 +489,7 @@ https://scrapbox.io/nazosauna/patch.aul
 Lua追加要素詳細
     _PATCH
         patch.aulのバージョン情報
-        例として "patch.aul r43_ss_65" のような文字列が格納されている
+        例として "patch.aul r43_ss_66" のような文字列が格納されている
 
     obj.randex(seed,frame)
         seed : integer
