@@ -181,3 +181,5 @@
 #include "patch_object_copy.hpp"
 #include "patch_obj_groupcontrol.hpp"
 #include "patch_setting_dialog_next.hpp"
+#include "patch_tra_acc_dec_movement.hpp"
+#include "patch_swap_filter.hpp"

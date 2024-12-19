@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_65"
+#define PATCH_VERSION_STR "r43_ss_66"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -115,6 +115,7 @@
 #define PATCH_SWITCH_TRA_AVIUTL_FILTER tra_aviutl_filter
 #define PATCH_SWITCH_TRA_CHANGE_DRAWFILTER tra_change_drawfilter
 #define PATCH_SWITCH_TRA_CHANGE_MODE tra_change_mode
+#define PATCH_SWITCH_TRA_ACC_DEC_MOVEMENT tra_acc_dec_movement
 #define PATCH_SWITCH_TRA_SPECIFIED_SPEED tra_specified_speed
 #define PATCH_SWITCH_AUP_LOAD aup_load
 #define PATCH_SWITCH_AUP_LAYER_SETTING aup_layer_setting
@@ -197,6 +198,7 @@
 #define PATCH_SWITCH_ANY_OBJ any_obj
 #define PATCH_SWITCH_OBJECT_COPY object_copy
 #define PATCH_SWITCH_PASTE_POS paste_pos
+#define PATCH_SWITCH_SWAP_FILTER swap_filter
 #define PATCH_SWITCH_EXCLUSION_FONT exclusion_font
 #define PATCH_SWITCH_INIT_WINDOW_POS init_window_pos
 #define PATCH_SWITCH_OBJECT_TABLE object_table

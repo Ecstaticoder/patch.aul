@@ -98,6 +98,8 @@ namespace patch {
 		} layer;
 
 		static inline HPEN disp_dialog_pen;
+		static inline int disp_dialog_wid;
+		static int __stdcall SetBkMode_wrap3760a(void* esp, HDC hdc, int mode);
 		struct {
 			inline static const char name[] = "object";
 
@@ -110,7 +112,7 @@ namespace patch {
 			ColorBGR clipping_col;
 			std::optional<int> clipping_height;
 			ColorBGR disp_dialog_col = 0xffffff;
-			//std::optional<int> disp_dialog_width = 0;
+			int disp_dialog_width = 1;
 			//std::optional<int> disp_dialog_style = 2;
 			std::optional<std::array<int, 3>> midpt_size;
 			ColorBGR2 name_col;
@@ -125,7 +127,7 @@ namespace patch {
 			inline static const char key_clipping_col[] = "clipping_col";
 			inline static const char key_clipping_height[] = "clipping_height";
 			inline static const char key_disp_dialog_col[] = "disp_dialog_col";
-			//inline static const char key_disp_dialog_width[] = "disp_dialog_width";
+			inline static const char key_disp_dialog_width[] = "disp_dialog_width";
 			//inline static const char key_disp_dialog_style[] = "disp_dialog_style";
 			inline static const char key_midpt_size[] = "midpt_size";
 			inline static const char key_name_col[] = "name_col";
@@ -158,10 +160,10 @@ namespace patch {
 				cr.regist(key_disp_dialog_col, [this](json_value_s* jv) {
 					ConfigReader::load_variable(jv, disp_dialog_col);
 				});
-				/*cr.regist(key_disp_dialog_width, [this](json_value_s* jv) {
+				cr.regist(key_disp_dialog_width, [this](json_value_s* jv) {
 					ConfigReader::load_variable(jv, disp_dialog_width);
 				});
-				cr.regist(key_disp_dialog_style, [this](json_value_s* jv) {
+				/*cr.regist(key_disp_dialog_style, [this](json_value_s* jv) {
 					ConfigReader::load_variable(jv, disp_dialog_style);
 				});*/
 				cr.regist(key_midpt_size, [this](json_value_s* jv) {
@@ -183,7 +185,7 @@ namespace patch {
 				cw.append(key_clipping_col, clipping_col);
 				cw.append(key_clipping_height, clipping_height);
 				cw.append(key_disp_dialog_col, disp_dialog_col);
-				//cw.append(key_disp_dialog_width, disp_dialog_width);
+				cw.append(key_disp_dialog_width, disp_dialog_width);
 				//cw.append(key_disp_dialog_style, disp_dialog_style);
 				cw.append(key_midpt_size, midpt_size);
 				cw.append(key_name_col, name_col);
@@ -459,6 +461,23 @@ namespace patch {
 					if (object.disp_dialog_col.to_col_rgb() != 0xffffff) {
 						disp_dialog_pen = CreatePen(PS_DOT, 0, object.disp_dialog_col.to_col_rgb());
 						OverWriteOnProtectHelper(GLOBAL::exedit_base + 0x375fb, 4).store_i32(0, &disp_dialog_pen);
+					}
+				}
+				{
+					if (1 < object.disp_dialog_width) {
+						disp_dialog_wid = min(object.disp_dialog_width, 15);
+						/*
+							1003760a ff1534a00910       call    dword ptr [GDI32.SetBkMode]
+							↓
+							1003760a 54                 push    esp
+							1003760b e8XxXxXxXx         call    newfunc
+							10037610 eb70               jmp     ee+37682
+						*/
+
+						OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x3760a, 8);
+						h.store_i16(0, '\x54\xe8');
+						h.replaceNearJmp(2, &SetBkMode_wrap3760a);
+						h.store_i16(6, '\xeb\x70');
 					}
 				}
 			}

@@ -157,6 +157,9 @@ void init_t::InitAtExeditLoad() {
 #ifdef PATCH_SWITCH_TRA_CHANGE_MODE
 	patch::tra_change_mode.init();
 #endif
+#ifdef PATCH_SWITCH_TRA_ACC_DEC_MOVEMENT
+	patch::tra_acc_dec_movement.init();
+#endif
 #ifdef PATCH_SWITCH_TRA_SPECIFIED_SPEED
 	patch::tra_specified_speed.init();
 #endif
@@ -414,6 +417,9 @@ void init_t::InitAtExeditLoad() {
 #endif
 #ifdef PATCH_SWITCH_PASTE_POS
 	patch::paste_pos.init();
+#endif
+#ifdef PATCH_SWITCH_SWAP_FILTER
+	patch::swap_filter.init();
 #endif
 #ifdef PATCH_SWITCH_EXCLUSION_FONT
 	patch::exclusion_font.init();

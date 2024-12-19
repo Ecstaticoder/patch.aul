@@ -159,6 +159,9 @@ public:
             #ifdef PATCH_SWITCH_TRA_CHANGE_MODE
                 patch::tra_change_mode.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_TRA_ACC_DEC_MOVEMENT
+                patch::tra_acc_dec_movement.switch_load(cr);
+            #endif
             #ifdef PATCH_SWITCH_TRA_SPECIFIED_SPEED
                 patch::tra_specified_speed.switch_load(cr);
             #endif
@@ -359,6 +362,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_PASTE_POS
                 patch::paste_pos.switch_load(cr);
+            #endif
+            #ifdef PATCH_SWITCH_SWAP_FILTER
+                patch::swap_filter.switch_load(cr);
             #endif
             #ifdef PATCH_SWITCH_EXCLUSION_FONT
                 patch::exclusion_font.switch_load(cr);
@@ -860,6 +866,9 @@ public:
             #ifdef PATCH_SWITCH_TRA_CHANGE_MODE
                 patch::tra_change_mode.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_TRA_ACC_DEC_MOVEMENT
+                patch::tra_acc_dec_movement.switch_store(switch_);
+            #endif
             #ifdef PATCH_SWITCH_TRA_SPECIFIED_SPEED
                 patch::tra_specified_speed.switch_store(switch_);
             #endif
@@ -1060,6 +1069,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_PASTE_POS
                 patch::paste_pos.switch_store(switch_);
+            #endif
+            #ifdef PATCH_SWITCH_SWAP_FILTER
+                patch::swap_filter.switch_store(switch_);
             #endif
             #ifdef PATCH_SWITCH_EXCLUSION_FONT
                 patch::exclusion_font.switch_store(switch_);

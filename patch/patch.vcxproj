@@ -192,11 +192,13 @@
     <ClInclude Include="patch_str2int.hpp" />
     <ClInclude Include="patch_str_minusval.hpp" />
     <ClInclude Include="patch_susie_load.hpp" />
+    <ClInclude Include="patch_swap_filter.hpp" />
     <ClInclude Include="patch_sync_play_cursor.hpp" />
     <ClInclude Include="patch_sysinfo_write.hpp" />
     <ClInclude Include="patch_text_op_size.hpp" />
     <ClInclude Include="patch_theme_cc.hpp" />
     <ClInclude Include="patch_trackbar.hpp" />
+    <ClInclude Include="patch_tra_acc_dec_movement.hpp" />
     <ClInclude Include="patch_tra_aviutlfilter.hpp" />
     <ClInclude Include="patch_tra_change_drawfilter.hpp" />
     <ClInclude Include="patch_tra_change_mode.hpp" />
@@ -324,8 +326,10 @@
     <ClCompile Include="patch_splash.cpp" />
     <ClCompile Include="patch_str2int.cpp" />
     <ClCompile Include="patch_susie_load.cpp" />
+    <ClCompile Include="patch_swap_filter.cpp" />
     <ClCompile Include="patch_theme_cc.cpp" />
     <ClCompile Include="patch_trackbar.cpp" />
+    <ClCompile Include="patch_tra_acc_dec_movement.cpp" />
     <ClCompile Include="patch_tra_change_drawfilter.cpp" />
     <ClCompile Include="patch_undo.cpp" />
     <ClCompile Include="patch_yc_rgb_conv.cpp" />

@@ -71,7 +71,7 @@ namespace patch {
 
         static void __stdcall set_undo_pp(ExEdit::Filter* efp, int new_value, int* current_value_ptr);
 
-        static int __cdecl f8d506(int object_idx);
+        static int __stdcall f8d508(int object_idx);
 
         static void __cdecl f3e002();
 
@@ -324,21 +324,19 @@ namespace patch {
                     ↓
                     1008d505 52                 push    edx
                     1008d506 53                 push    ebx
-                    1008d507 e8XxXxXxXx         call    f8d507
-                    1008d50c 5b                 pop     ebx
+                    1008d507 90                 nop
+                    1008d508 e8XxXxXxXx         call    f8d508
                     1008d50d 5a                 pop     edx
                     1008d50e 85c0               test    eax,eax
                     1008d510 7c19               jl      1008d52b
                     1008d512 f7c300000001       test    ebx,01000000
                     1008d518 89442410           mov     dword ptr [esp+10],eax
                 */
-
                 constexpr int vp_begin = 0x8d505;
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x8d51a - vp_begin);
-                h.store_i32(0x8d505 - vp_begin, '\x52\x53\xe8\x00');
-                h.replaceNearJmp(0x8d508 - vp_begin, &f8d506);
-                h.store_i32(0x8d50c - vp_begin, '\x5b\x5a\x85\xc0');
-                h.store_i8(0x8d510 - vp_begin, '\x7c');
+                h.store_i32(0x8d505 - vp_begin, '\x52\x53\x90\xe8');
+                h.replaceNearJmp(0x8d509 - vp_begin, &f8d508);
+                h.store_i32(0x8d50d - vp_begin, '\x5a\x85\xc0\x7c');
                 h.store_i8(0x8d519 - vp_begin, '\x44');
             }
 			// OverWriteOnProtectHelper(GLOBAL::exedit_base + 0x08d50e, 4).store_i32(0, '\x0f\x1f\x40\x00'); // nop

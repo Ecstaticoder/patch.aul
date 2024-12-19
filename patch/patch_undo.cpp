@@ -29,7 +29,7 @@ namespace patch {
             *current_value_ptr = new_value;
         }
     }
-    int __cdecl undo_t::f8d506(int object_idx) {
+    int __stdcall undo_t::f8d508(int object_idx) {
         int dialog_idx = *ObjDlg_ObjectIndex_ptr;
         if (dialog_idx < 0) {
             return -1;
