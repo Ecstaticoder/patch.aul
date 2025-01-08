@@ -2,7 +2,7 @@ patch.aul r43beta1
 © 2021-2023 ePi
 https://scrapbox.io/ePi5131/patch.aul
 
-patch.aul r43_ss_66
+patch.aul r43_ss_67
 https://scrapbox.io/nazosauna/patch.aul
 
 概要
@@ -55,6 +55,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・拡張編集ウィンドウの上部をドラッグしても正常にリサイズができるように
     ・元に戻す の多数のバグ修正
         ・レイヤー削除→元に戻すで他シーンのオブジェクトが消える
+        ・表示中ではないシーンのオブジェクトを編集した後に元に戻すとオブジェクトが消える
         ・Ctrlで複数オブジェクトを選択しながら設定ダイアログのトラックバーを動かすと一部オブジェクトが正常に戻らない
         ・Ctrlで複数オブジェクトを選択しながら一部フィルタの色などを変更すると正常に戻らない
         ・Shiftを押しながらグループ化された複数オブジェクトの長さを変更すると正常に戻らない
@@ -210,6 +211,9 @@ https://scrapbox.io/nazosauna/patch.aul
     ・オブジェクトを消した際、次に選択されるオブジェクトを変更（左右のオブジェクトより上下を優先）
     ・メディアオブジェクトで置いたアニメーション効果にて、フィルタ効果を上/下に移動をするとタイムライン上の表示名が正常ではないのを修正
     ・トラックバー変化方法の加減速移動を長いオブジェクトの中間点で設定すると正常でなくなるのを修正
+    ・テキストで縦書にしている時に制御文字でフォントを変えると正常ではないのを修正
+    ・音声波形表示（編集全体の音声を元にする）など、音を複数回取得する時に音がおかしくなるのをキャッシュで対策
+    ・改行のみのテキストに画像ループを付けると例外になるのを修正
 
     追加
     ・コンソールの表示
@@ -384,7 +388,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "obj_rotation" : boolean, ; ローテーションがスレッド数より小さいサイズに対して正常に反映されないバグを修正 (既定値: true)
         "obj_resize" : boolean, ; リサイズがスレッド数より小さいサイズに対して正常に反映されないバグを修正 (既定値: true)
         "obj_lensblur" : boolean, ; 小さい画像に対してサイズ固定で範囲の大きいレンズブラーを掛けると例外になるのを修正 (既定値: true)
-        "obj_imageloop" : boolean, ; 画像ループの個別オブジェクトにチェックが入っている時、ループ毎に効果を付与し続けていくのを修正 (既定値: true)
+        "obj_imageloop" : boolean, ; 画像ループの個別オブジェクトにチェックが入っている時、ループ毎に効果を付与し続けていくのを修正。サイズ0のオブジェクトで例外になるのを修正 (既定値: true)
         "obj_noise" : boolean, ; ノイズの速度X、変化速度のトラック変化方法が移動無し以外の時に速度Yの値をもとに計算が行われてしまうのを修正 (既定値: true)
 	"obj_radiationalblur" : boolean, ; 放射ブラーでアーチファクトが出るのを修正 (既定値: true)
 	"obj_flash" : boolean, ; 閃光でアーチファクトが出るのを修正 (既定値: true)
@@ -404,6 +408,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "image_data_cache" : boolean, ; 画像データのキャッシュのサイズをページ単位になるように広げる (既定値: true)
         "scene_cache" : boolean, ; シーン画像生成に時間がかかった時にキャッシュを作成する機能の追加 (既定値: true)
         "scene_vram" : boolean, ; フィルタオブジェクトのレンズブラーやぼかしフィルタなどをシーンで読むとエラーとなるのを修正 (既定値: true)
+        "audio_ee_main" : boolean, ; 拡張編集(音声)にて音のキャッシュを取る (既定値: true)
         "audio_layer_end" : boolean, ; 拡張編集の音声処理のメイン関数0x49ca0にて最終レイヤー指定が機能していなかったのを修正 (既定値: true)
         "playback_speed" : boolean, ; 中間点と再生速度の関連バグの修正 (既定値: true)
         "playback_pos" : boolean, ; 再生位置をトラックバー移動にしてループ再生した時の再生位置が正しくないのを修正 (既定値: true)
@@ -426,6 +431,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "group_id" : boolean, ; プロジェクトファイル読み込み時にグループ化IDの最大値が高い場合、整理する (既定値: true)
         "sat_rgb_space" : boolean, ; RGB色空間で飽和の処理を微調整 (既定値: true)
         "borderonly_text" : boolean, ; テキストに縁のみを追加する。fast.textborderがtrueの必要あり (既定値: true)
+        "update_count" : boolean, ; トラックバーなど変更を検知するためのパッチ。他の機能を動かすために必要になる (既定値: true)
         "patch_script_sort" : boolean, ; スクリプト並び替え管理プラグインとの競合を解消 (既定値: true)
         "undo" : boolean, ; 元に戻す 関連のバグ修正 (既定値: true)
             "undo.redo" : boolean, ; やり直す を追加 (既定値: true)
@@ -489,7 +495,7 @@ https://scrapbox.io/nazosauna/patch.aul
 Lua追加要素詳細
     _PATCH
         patch.aulのバージョン情報
-        例として "patch.aul r43_ss_66" のような文字列が格納されている
+        例として "patch.aul r43_ss_67" のような文字列が格納されている
 
     obj.randex(seed,frame)
         seed : integer
