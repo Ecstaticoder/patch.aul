@@ -39,15 +39,14 @@ namespace patch::fast {
 			height *= 2;
 		}
 
-		char fontname_v[LF_FACESIZE + 1];
+		wchar_t fontname_w[LF_FACESIZE + 1];
+		int ofs = 0;
 		if (vertical) {
-			fontname_v[0] = '@';
-			strncpy_s(fontname_v + 1, LF_FACESIZE + 1, current_font_name, LF_FACESIZE);
-		} else {
-			strncpy_s(fontname_v, LF_FACESIZE, current_font_name, LF_FACESIZE);
+			fontname_w[0] = L'@';
+			ofs++;
 		}
-
-		auto font = ::CreateFontA(height, 0, 0, 0, weight, italic, 0, 0, 1, 8, 0, 4, 0, fontname_v);
+		MultiByteToWideChar(CP_ACP, 0, current_font_name, -1, fontname_w + ofs, LF_FACESIZE);
+		auto font = ::CreateFontW(height, 0, 0, 0, weight, italic, 0, 0, 1, 8, 0, 4, 0, fontname_w);
 		if (font == NULL)return currentFont = NULL;
 		LOGFONTW lfw;
 		::GetObjectW(font, sizeof(LOGFONTW), &lfw);
@@ -62,11 +61,6 @@ namespace patch::fast {
 	}
 
 	HFONT WINAPI text_t::CreateFontIndirectW(const LOGFONTW* lplf) {
-		char facename[LF_FACESIZE];
-		auto const facename_size = ::WideCharToMultiByte(CP_ACP, 0U, lplf->lfFaceName, -1, nullptr, 0, nullptr, nullptr);
-		if (::WideCharToMultiByte(CP_ACP, 0U, lplf->lfFaceName, -1, facename, sizeof(facename), nullptr, nullptr) == 0) {
-			return NULL;
-		}
 
 		std::lock_guard lock(text.mtx);
 		auto& map = text.map;

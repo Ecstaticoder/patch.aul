@@ -31,6 +31,8 @@ namespace patch {
 
     // テキストで制御文字を使用した時に変な描画がされることがあるのを簡易修正
     // フレームレートの分母が大きい時に正常に表示されないのを修正
+    // 縦書で制御文字のフォントを変える時に@を付けないと正常にならない問題の修正
+
     inline class obj_Text_t {
 
         bool enabled = true;
@@ -39,7 +41,7 @@ namespace patch {
     public:
         static void __cdecl exedit_exfunc_x40_ret_wrap(void*, int, int, wchar_t*, ExEdit::PixelBGR, ExEdit::PixelBGR, int, HFONT, int*, int*, int, int, int, int*, int);
         static void __cdecl yc_buffer_fill_wrap(void*, int, int, int, int, short, short, short, short, int);
-        static void __cdecl FUN_100877e0(HMENU hmenu, int param);
+        static wchar_t* __stdcall lstrcpyW_wrap(void* esp, wchar_t* dst, wchar_t* src);
         void init() {
             enabled_i = enabled;
 
@@ -87,6 +89,18 @@ namespace patch {
                 h.store_i32(12, '\x00\x00\xdc\x0d');
                 h.store_i32(16, GLOBAL::exedit_base + OFS::ExEdit::double_1000);
                 h.store_i16(20, '\xeb\x0c');
+            }
+
+            { // 縦書で制御文字のフォントを変える時に@を付けないと正常にならない問題の修正
+                /*
+                    10050745 ff15d4a00910       call    lstrcpyW
+                    ↓
+                    10050745 54                 push    esp
+                    10050746 e8XxXxXxXx
+                */
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x50745, 6);
+                h.store_i16(0, '\x54\xe8');
+                h.replaceNearJmp(2, &lstrcpyW_wrap);
             }
         }
 

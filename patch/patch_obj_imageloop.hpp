@@ -28,6 +28,7 @@
 namespace patch {
 
     // init at exedit load
+    // サイズ0のオブジェクト（主に改行のみのテキスト）でオフセットアドレス5ab38、5ab5c、5a6bfが起こるのを修正
     // 画像ループにて個別オブジェクトにして何かしら効果を付けた時に、ループごとに元の画像に戻さず効果を付与し続けていくのを修正
 
     inline class obj_ImageLoop_t {
@@ -49,38 +50,67 @@ namespace patch {
 
             auto& cursor = GLOBAL::executable_memory_cursor;
 
-            OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x05a80a, 6);
-            h.store_i16(0, '\x90\xe8'); // nop, call
-            h.replaceNearJmp(2, cursor);
-            /*
-                1005a80a 0f8e86010000    jle        1005a996
-                ; このjleで飛ぶことは無いはずなので置き換えてしまう
-                ↓
+            { // サイズ0のオブジェクト（主に改行のみのテキスト）でオフセットアドレス5ab38、5ab5c、5a6bfが起こるのを修正
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x05a570, 5);
+                h.store_i8(0, '\xe9');
+                h.replaceNearJmp(1, cursor);
+                /*
+                    1005a570 81ec8c000000       sub     esp,0000008c
+                    ↓
+                    1005a570 e9XxXxXxXx         call    curspr
+                    1005a575 00
+                */
+                static const char code_put[] =
+                    "\x8b\x4c\x24\x08"         // mov     ecx,dword ptr [esp+08] ; efpip
+                    "\x33\xc0"                 // xor     eax,eax
+                    "\x83\xc1\x70"             // add     ecx,+70
+                    "\x39\x41\x44"             // cmp     dword ptr [ecx+44],eax ; efpip->obj_w
+                    "\x7e\x05"                 // jng     skip,05
+                    "\x39\x41\x48"             // cmp     dword ptr [ecx+48],eax
+                    "\x7f\x02"                 // jg      skip,02
+                    "\x40"                     // inc     eax
+                    "\xc3"                     // ret
+                    "\x81\xec\x8c\x00\x00\x00" // sub     esp,0000008c
+                    "\xe9"                     // jmp     ee+5a576
+                    ;
 
-                1005a80a 90              nop
-                1005a80b e8XxXxXxXx      call       executable_memory_cursor
-                ; ecxとedxは退避しなくても大丈夫そう
-                ; eaxは0に
-            */
-
-            static const char code_put[] =
-                "\x8b\x84\x24\xa4\x00\x00\x00"// mov     eax,dword ptr [esp+000000a4]
-                "\x53"                        // push    ebx ; efpip
-                "\x50"                        // push    eax ; efp
-                "\xe8XXXX"                    // call    new_function
-                "\x83\xc4\x08"                // add     esp,+08
-                "\x33\xc0"                    // xor     eax,eax
-                "\xc3"                        // ret
-                ;
-
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
-            store_i32(cursor + 10, (int32_t)&save_current_image - (int32_t)cursor - 14);
-            cursor += sizeof(code_put) - 1;
+                memcpy(cursor, code_put, sizeof(code_put) - 1); cursor += sizeof(code_put) - 1;
+                store_i32(cursor, GLOBAL::exedit_base + 0x05a576 - (int)cursor - 4); cursor += 4;
+            }
 
 
+            { // 画像ループにて個別オブジェクトにして何かしら効果を付けた時に、ループごとに元の画像に戻さず効果を付与し続けていくのを修正
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x05a80a, 6);
+                h.store_i16(0, '\x90\xe8'); // nop, call
+                h.replaceNearJmp(2, cursor);
+                /*
+                    1005a80a 0f8e86010000    jle        1005a996
+                    ; このjleで飛ぶことは無いはずなので置き換えてしまう
+                    ↓
 
-            ReplaceNearJmp(GLOBAL::exedit_base + 0x05a92c, &do_after_filter_effect_wrap);
-            
+                    1005a80a 90              nop
+                    1005a80b e8XxXxXxXx      call       executable_memory_cursor
+                    ; ecxとedxは退避しなくても大丈夫そう
+                    ; eaxは0に
+                */
+
+                static const char code_put[] =
+                    "\x8b\x84\x24\xa4\x00\x00\x00"// mov     eax,dword ptr [esp+000000a4]
+                    "\x53"                        // push    ebx ; efpip
+                    "\x50"                        // push    eax ; efp
+                    "\xe8XXXX"                    // call    new_function
+                    "\x83\xc4\x08"                // add     esp,+08
+                    "\x33\xc0"                    // xor     eax,eax
+                    "\xc3"                        // ret
+                    ;
+
+                memcpy(cursor, code_put, sizeof(code_put) - 1);
+                store_i32(cursor + 10, (int32_t)&save_current_image - (int32_t)cursor - 14);
+                cursor += sizeof(code_put) - 1;
+
+
+                ReplaceNearJmp(GLOBAL::exedit_base + 0x05a92c, &do_after_filter_effect_wrap);
+            }
         }
 
         void switching(bool flag) {

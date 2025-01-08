@@ -54,6 +54,25 @@ namespace patch {
         }
     }
 
+    void __stdcall undo_t::run_undo_flag8_layer_disp(int object_ofs, ExEdit::UndoData* ud) {
+        ExEdit::Object* obj = reinterpret_cast<ExEdit::Object*>((int)*ObjectArrayPointer_ptr + object_ofs);
+        if (obj->scene_set == *reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SceneDisplaying)) {
+            obj->layer_disp = ud->object_layer_disp_opt;
+        } else {
+            obj->layer_disp = -1;
+        }
+    }
+
+    void* __stdcall undo_t::run_undo_flag0(ExEdit::Object* dst, ExEdit::Object* src, void* eax) {
+        *dst = *src;
+        if (dst->scene_set == *reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SceneDisplaying)) {
+            dst->layer_disp = dst->layer_set;
+        } else {
+            dst->layer_disp = -1;
+        }
+        return eax;
+    }
+
     int __cdecl undo_t::efDraw_func_WndProc_wrap_06e2b4(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam, AviUtl::EditHandle* editp, ExEdit::Filter* efp) {
         auto ret = efDraw_func_WndProc(hwnd, message, wparam, lparam, editp, efp);
         if (ret) return ret;

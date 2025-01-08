@@ -122,23 +122,29 @@ namespace patch {
 
         running_undo = true;
 
-        int i;
-        // 元々はobject_numを返す。redoデータが残ることでobject_numではなくdata_id > current_idとなるタイミングのnumを返すことでrun_undo内の処理との辻褄が合う
-        for (i = 1; i < UndoInfo_object_num; i++) {
-            if (UndoDataPtrArray[i]->data_id > UndoInfo_current_id) {
+        int near_scene = *SceneDisplaying_ptr;
+        int abs_diff = 128;
+
+        int ret; // 元々はobject_numを返す。redoデータがある関係上object_numではなくdata_id > current_idとなるタイミングのnumを返すことでrun_undo内の処理との辻褄が合う
+        for (ret = 0; ret < UndoInfo_object_num; ret++) {
+            if (UndoDataPtrArray[ret]->data_id == UndoInfo_current_id) {
+                int scene_idx = get_scene_idx_UndoData(ret);
+                int ad = abs(scene_idx - *SceneDisplaying_ptr);
+                if (ad < abs_diff) {
+                    near_scene = scene_idx;
+                    abs_diff = ad;
+                }
+            } else if (UndoDataPtrArray[ret]->data_id > UndoInfo_current_id) {
                 break;
             }
         }
 
-        // 必要であればシーン切り替えを行う
-        if (UndoDataPtrArray[i - 1]->data_id == UndoInfo_current_id) {
-            int scene_idx = get_scene_idx_UndoData(i - 1);
-            if (scene_idx != *SceneDisplaying_ptr) {
-                change_disp_scene(scene_idx, *fp_g_ptr, *editp_ptr);
-            }
+        // 変更があった中の最も近いシーンに切り替える
+        if (near_scene != *SceneDisplaying_ptr) {
+            change_disp_scene(near_scene, *fp_g_ptr, *editp_ptr);
         }
 
-        return i;
+        return ret;
     }
 
     void __cdecl redo_t::end_run_undo() {

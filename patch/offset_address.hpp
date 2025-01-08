@@ -49,6 +49,9 @@ namespace OFS {
 
 		constexpr i32 get_filename_cursor = 0x02c3d0;
 
+		constexpr i32 tick_start_playing = 0x2c4d8c;
+		constexpr i32 tick_start_output = 0x2da1b8;
+
 		constexpr i32 str_AviUtl = 0x0742a0; // "AviUtl"
 
 		constexpr i32 str_dot_avi = 0x0745fc; // ".avi"
@@ -309,6 +312,7 @@ namespace OFS {
 
 		constexpr i32 LoadImageCache = 0x00d340;
 
+		constexpr i32 audio_func_main = 0x049ca0;
 		constexpr i32 video_func_main = 0x048830;
 		constexpr i32 video_func_idx = 0x1a5384;
 		constexpr i32 store_filter = 0x047e30;
@@ -321,6 +325,7 @@ namespace OFS {
 		constexpr i32 get_scene_image = 0x04ce20;
 		constexpr i32 get_scene_size = 0x02b980;
 		constexpr i32 scene_has_alpha = 0x02ba00;
+		constexpr i32 change_disp_scene = 0x02ba60;
 
 		constexpr i32 LayerSetting = 0x188498;
 		constexpr i32 CurrentLayerSetting_ptr = 0x0a4058;
@@ -330,6 +335,14 @@ namespace OFS {
 
 		constexpr i32 next_undo = 0x08d150;
 		constexpr i32 set_undo = 0x08d290;
+		constexpr i32 run_undo = 0x08d490;
+		constexpr i32 UndoDataPtrArray = 0x2363a8;
+		constexpr i32 undo_id_max = 0x244e08;
+		constexpr i32 undo_buffer_ptr = 0x244e0c;
+		constexpr i32 undo_buffer_ofs = 0x244e10;
+		constexpr i32 undo_id_current = 0x244e14;
+		constexpr i32 undo_buffer_size = 0x244e18;
+		constexpr i32 undo_limit_mode = 0x244e1c;
 
 		constexpr i32 frame_cursor = 0x1a5304;
 		constexpr i32 frame_n = 0x14d3a0;

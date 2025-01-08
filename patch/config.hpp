@@ -312,6 +312,9 @@ public:
             #ifdef PATCH_SWITCH_SCENE_VRAM
                 patch::scene_vram.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_AUDIO_EE_MAIN
+                patch::audio_ee_main.switch_load(cr);
+            #endif
             #ifdef PATCH_SWITCH_AUDIO_LAYER_END
                 patch::audio_layer_end.switch_load(cr);
             #endif
@@ -383,6 +386,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
                 patch::borderonly_text.switch_load(cr);
+            #endif
+            #ifdef PATCH_SWITCH_UPDATE_COUNT
+                patch::update_count.switch_load(cr);
             #endif
             #ifdef PATCH_SWITCH_SCRIPT_SORT_PATCH
                 patch::patch_script_sort.switch_load(cr);
@@ -1019,6 +1025,9 @@ public:
             #ifdef PATCH_SWITCH_SCENE_VRAM
                 patch::scene_vram.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_AUDIO_EE_MAIN
+                patch::audio_ee_main.switch_store(switch_);
+            #endif
             #ifdef PATCH_SWITCH_AUDIO_LAYER_END
                 patch::audio_layer_end.switch_store(switch_);
             #endif
@@ -1090,6 +1099,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
                 patch::borderonly_text.switch_store(switch_);
+            #endif
+            #ifdef PATCH_SWITCH_UPDATE_COUNT
+                patch::update_count.switch_store(switch_);
             #endif
             #ifdef PATCH_SWITCH_SCRIPT_SORT_PATCH
                 patch::patch_script_sort.switch_store(switch_);

@@ -41,5 +41,19 @@ namespace patch {
 			memset(ptr, 0, max_w * max_h * 8);*/
 		//printf("%d\n", GetTickCount() - t0);
 	}
+	wchar_t* __stdcall obj_Text_t::lstrcpyW_wrap(void* esp, wchar_t* dst, wchar_t* src) {
+		if (src[0] != L'@') {
+			int flag = *reinterpret_cast<int*>((int)esp + 0x1b8);
+			if (flag & 0x20) { // 縦書
+				if (31 <= lstrlenW(src)) { // 既に31文字の場合はそれ以上増やせないので失敗（直前フォント）とする
+					return NULL;
+				}
+				dst[0] = L'@';
+				lstrcpyW(&dst[1], src);
+				return dst;
+			}
+		}
+		return lstrcpyW(dst, src);
+	}
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_OBJ_TEXT

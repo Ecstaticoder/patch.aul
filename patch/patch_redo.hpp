@@ -56,6 +56,8 @@ namespace patch {
             ExEdit::UndoData* undodata = UndoDataPtrArray[undo_id];
             if (undodata->object_id & 0x1000000) {
                 return undodata->object_layer_disp_opt;
+            } else if (undodata->data_size >= 0x5e4) {
+                return reinterpret_cast<ExEdit::Object*>(&undodata->data)->scene_set;
             } else {
                 return (*ObjectArrayPointer_ptr)[undodata->object_id].scene_set;
             }
@@ -170,9 +172,6 @@ namespace patch {
 
                 ExEdit::UndoData* undodata = UndoDataPtrArray[id];
 
-                void* ptr1;
-                void* ptr2;
-                int cmpsize;
 
                 if (undodata->object_id & 0x1000000) { // レイヤー
                     auto ls = reinterpret_cast<ExEdit::LayerSetting*>(GLOBAL::exedit_base + OFS::ExEdit::LayerSetting) + undodata->object_layer_disp_opt * 100 + (undodata->object_id & 0xffffff);
@@ -187,41 +186,27 @@ namespace patch {
                         if (lstrcmpA(ls->name, undo_layer->name_buf) != 0) return true;
                     }
                 } else {
-                    ptr1 = (void*)&ObjectArrayPointer[undodata->object_id];
+                    auto ptr1 = &ObjectArrayPointer[undodata->object_id];
                     if (undodata->data_size > 0x1c) {
-                        ptr2 = &undodata->data;
-                        cmpsize = sizeof(ExEdit::Object);
-
-                        /* // patch_right_trackbarで修正したためたぶん不要になった
-                        auto fix_track_right = [](ExEdit::Object* obj) {
-                            int track_num = obj->track_n;
-                            for (int i = 0; i < track_num; i++) {
-                                if (obj->track_mode[i].num == 0) {
-                                    obj->track_value_right[i] = obj->track_value_left[i];
-                                }
-                            }
-                        };
-
-                        fix_track_right(static_cast<ExEdit::Object*>(ptr1)); // 処理順の関係かトラック右の値が変わってしまっていることがあるので直す
-                        fix_track_right(static_cast<ExEdit::Object*>(ptr2));
-                        */
-
                         void* ptr3 = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(exdata_buffer) + ObjectArrayPointer[undodata->object_id].exdata_offset + 4);
-                        void* ptr4 = reinterpret_cast<void*>(reinterpret_cast<DWORD>(&undodata->data) + cmpsize);
-                        int excmpsize = undodata->data_size - 0x1c - cmpsize;
+                        void* ptr4 = reinterpret_cast<void*>(reinterpret_cast<DWORD>(&undodata->data) + sizeof(ExEdit::Object));
+                        int excmpsize = undodata->data_size - 0x1c - sizeof(ExEdit::Object);
                         if (memcmp(ptr3, ptr4, excmpsize))return true;
+
+                        auto ptr2 = reinterpret_cast<ExEdit::Object*>(&undodata->data);
+                        if(ptr1->flag != ptr2->flag)return true;
+                        // layer_dispの比較を無し。layer_setで比較できているので問題なし
+                        if (memcmp(&ptr1->frame_begin, &ptr2->frame_begin, sizeof(ExEdit::Object) - 8))return true;
                     } else {
-                        ptr2 = &undodata->object_flag_opt;
-                        if (undodata->object_flag_opt == 0) {
-                            cmpsize = 4;
-                        } else {
-                            cmpsize = 0x10;
+                        if ((int)ptr1->flag != undodata->object_flag_opt)return true;
+                        if (undodata->object_flag_opt != 0) {
+                            if (ptr1->layer_set != undodata->object_layer_disp_opt)return true; // undodata->object_layer_disp_opはlayer_setを入れるようにしたため
+                            if (ptr1->frame_begin != undodata->object_frame_begin_opt)return true;
+                            if (ptr1->frame_end != undodata->object_frame_end_opt)return true;
                         }
                     }
-                    if (memcmp(ptr1, ptr2, cmpsize))return true;
+                    
                 }
-
-
                 return false;
             };
 
@@ -365,25 +350,25 @@ namespace patch {
             if (!enabled_i)return;
 
             ObjectArrayPointer_ptr = reinterpret_cast<decltype(ObjectArrayPointer_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
-            layer_setting_ofsptr_ptr = reinterpret_cast<decltype(layer_setting_ofsptr_ptr)>(GLOBAL::exedit_base + 0x0a4058);
-            exdata_buffer_ptr = reinterpret_cast<void**>(GLOBAL::exedit_base + 0x1e0fa8);
+            layer_setting_ofsptr_ptr = reinterpret_cast<decltype(layer_setting_ofsptr_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::CurrentLayerSetting_ptr);
+            exdata_buffer_ptr = reinterpret_cast<void**>(GLOBAL::exedit_base + OFS::ExEdit::ExdataPointer);
 
-            UndoInfo_object_num_ptr = reinterpret_cast<decltype(UndoInfo_object_num_ptr)>(GLOBAL::exedit_base + 0x244e08);
-            UndoInfo_write_offset_ptr = reinterpret_cast<decltype(UndoInfo_write_offset_ptr)>(GLOBAL::exedit_base + 0x244e10);
-            UndoInfo_current_id_ptr = reinterpret_cast<decltype(UndoInfo_current_id_ptr)>(GLOBAL::exedit_base + 0x244e14);
-            SceneDisplaying_ptr = reinterpret_cast<decltype(SceneDisplaying_ptr)>(GLOBAL::exedit_base + 0x1a5310);
-            UndoInfo_buffer_ptr_ptr = reinterpret_cast<decltype(UndoInfo_buffer_ptr_ptr)>(GLOBAL::exedit_base + 0x244e0c);
-            UndoInfo_buffer_size_ptr = reinterpret_cast<decltype(UndoInfo_buffer_size_ptr)>(GLOBAL::exedit_base + 0x244e18);
-            UndoInfo_limit_mode_ptr = reinterpret_cast<decltype(UndoInfo_limit_mode_ptr)>(GLOBAL::exedit_base + 0x244e1c);
-            selecting_obj_num_ptr = reinterpret_cast<decltype(selecting_obj_num_ptr)>(GLOBAL::exedit_base + 0x167d88);
+            UndoInfo_object_num_ptr = reinterpret_cast<decltype(UndoInfo_object_num_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_id_max);
+            UndoInfo_write_offset_ptr = reinterpret_cast<decltype(UndoInfo_write_offset_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_buffer_ofs);
+            UndoInfo_current_id_ptr = reinterpret_cast<decltype(UndoInfo_current_id_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_id_current);
+            SceneDisplaying_ptr = reinterpret_cast<decltype(SceneDisplaying_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::SceneDisplaying);
+            UndoInfo_buffer_ptr_ptr = reinterpret_cast<decltype(UndoInfo_buffer_ptr_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_buffer_ptr);
+            UndoInfo_buffer_size_ptr = reinterpret_cast<decltype(UndoInfo_buffer_size_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_buffer_size);
+            UndoInfo_limit_mode_ptr = reinterpret_cast<decltype(UndoInfo_limit_mode_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_limit_mode);
+            selecting_obj_num_ptr = reinterpret_cast<decltype(selecting_obj_num_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::SelectingObjectNum);
             editp_ptr = reinterpret_cast<decltype(editp_ptr)>(GLOBAL::exedit_base + 0x1a532c);
-            fp_g_ptr = reinterpret_cast<decltype(fp_g_ptr)>(GLOBAL::exedit_base + 0x14d4b4);
+            fp_g_ptr = reinterpret_cast<decltype(fp_g_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::exedit_fp);
 
-            UndoDataPtrArray = reinterpret_cast<decltype(UndoDataPtrArray)>(GLOBAL::exedit_base + 0x2363a8);
+            UndoDataPtrArray = reinterpret_cast<decltype(UndoDataPtrArray)>(GLOBAL::exedit_base + OFS::ExEdit::UndoDataPtrArray);
 
             exedit_memmove = reinterpret_cast<decltype(exedit_memmove)>(GLOBAL::exedit_base + 0x091f60);
-            run_undo = reinterpret_cast<decltype(run_undo)>(GLOBAL::exedit_base + 0x08d490);
-            change_disp_scene = reinterpret_cast<decltype(change_disp_scene)>(GLOBAL::exedit_base + 0x02ba60);
+            run_undo = reinterpret_cast<decltype(run_undo)>(GLOBAL::exedit_base + OFS::ExEdit::run_undo);
+            change_disp_scene = reinterpret_cast<decltype(change_disp_scene)>(GLOBAL::exedit_base + OFS::ExEdit::change_disp_scene);
 
 
             /*  undo_idが増えた時に前データの最適化を行う

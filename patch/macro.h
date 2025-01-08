@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_66"
+#define PATCH_VERSION_STR "r43_ss_67"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -182,6 +182,7 @@
 #define PATCH_SWITCH_IMAGE_DATA_CACHE image_data_cache
 #define PATCH_SWITCH_SCENE_CACHE scenecache
 #define PATCH_SWITCH_SCENE_VRAM scenevram
+#define PATCH_SWITCH_AUDIO_EE_MAIN audio_ee_main
 #define PATCH_SWITCH_AUDIO_LAYER_END audio_layer_end
 // #define PATCH_SWITCH_AUDIO_PREPROCESS audio_preprocess
 #define PATCH_SWITCH_PLAYBACK_SPEED pb_speed
@@ -204,6 +205,7 @@
 #define PATCH_SWITCH_OBJECT_TABLE object_table
 #define PATCH_SWITCH_GROUP_ID group_id
 #define PATCH_SWITCH_SAT_RGB_SPACE sat_rgb
+#define PATCH_SWITCH_UPDATE_COUNT update_count
 #define PATCH_SWITCH_SCRIPT_SORT_PATCH script_sort_patch
 
 

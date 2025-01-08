@@ -31,12 +31,8 @@ namespace patch {
     inline class undo_t {
 
         inline static ExEdit::Object** ObjectArrayPointer_ptr;
-        inline static int* NextObjectIdxArray;
         inline static ExEdit::LayerSetting** layer_setting_ofsptr_ptr;
-        inline static void** exdata_buffer_ptr;
-        inline static int* timeline_obj_click_mode_ptr;
         inline static int* ObjDlg_ObjectIndex_ptr;
-        inline static int* timeline_edit_both_adjacent_ptr;
         inline static int* UndoInfo_current_id_ptr;
 
         inline static ExEdit::SceneSetting* scene_setting;
@@ -75,6 +71,9 @@ namespace patch {
 
         static void __cdecl f3e002();
 
+        static void __stdcall run_undo_flag8_layer_disp(int object_ofs, ExEdit::UndoData* ud);
+        static void* __stdcall run_undo_flag0(ExEdit::Object* dst, ExEdit::Object* src, void* eax);
+
         static int __cdecl efDraw_func_WndProc_wrap_06e2b4(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam, AviUtl::EditHandle* editp, ExEdit::Filter* efp);
 
         static int __stdcall f8b97f(HWND hwnd, ExEdit::Filter* efp, WPARAM wparam, LPARAM lparam);
@@ -106,6 +105,7 @@ namespace patch {
 
         static void __cdecl add_track_value_wrap(ExEdit::Filter* efp, int track_id, int add_value);
 
+
         static void interval_set_undo(int object_idx, int flag) {
             static ULONGLONG pretime = 0;
             static int pre_undo_id = 0;
@@ -131,17 +131,13 @@ namespace patch {
             if (!enabled_i) return;
 
             ObjectArrayPointer_ptr = reinterpret_cast<decltype(ObjectArrayPointer_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
-            NextObjectIdxArray = reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::NextObjectIdxArray);
             layer_setting_ofsptr_ptr = reinterpret_cast<decltype(layer_setting_ofsptr_ptr)>(GLOBAL::exedit_base + 0x0a4058);
-            exdata_buffer_ptr = reinterpret_cast<void**>(GLOBAL::exedit_base + 0x1e0fa8);
-            timeline_obj_click_mode_ptr = reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::timeline_obj_click_mode);
             ObjDlg_ObjectIndex_ptr = reinterpret_cast<int*>(GLOBAL::exedit_base + 0x177a10);
-            timeline_edit_both_adjacent_ptr = reinterpret_cast<int*>(GLOBAL::exedit_base + 0x14ea00);
             scene_setting = reinterpret_cast<decltype(scene_setting)>(GLOBAL::exedit_base + 0x177a50);
-            UndoInfo_current_id_ptr = reinterpret_cast<decltype(UndoInfo_current_id_ptr)>(GLOBAL::exedit_base + 0x244e14);
+            UndoInfo_current_id_ptr = reinterpret_cast<decltype(UndoInfo_current_id_ptr)>(GLOBAL::exedit_base + OFS::ExEdit::undo_id_current);
 			
-            set_undo = reinterpret_cast<decltype(set_undo)>(GLOBAL::exedit_base + 0x08d290);
-            AddUndoCount = reinterpret_cast<decltype(AddUndoCount)>(GLOBAL::exedit_base + 0x08d150);
+            set_undo = reinterpret_cast<decltype(set_undo)>(GLOBAL::exedit_base + OFS::ExEdit::set_undo);
+            AddUndoCount = reinterpret_cast<decltype(AddUndoCount)>(GLOBAL::exedit_base + OFS::ExEdit::next_undo);
             efDraw_func_WndProc = reinterpret_cast<decltype(efDraw_func_WndProc)>(GLOBAL::exedit_base + 0x01b550);
             NormalizeExeditTimelineY = reinterpret_cast<decltype(NormalizeExeditTimelineY)>(GLOBAL::exedit_base + 0x032c10);
             add_track_value = reinterpret_cast<decltype(add_track_value)>(GLOBAL::exedit_base + 0x01c0f0);
@@ -399,6 +395,70 @@ namespace patch {
                 store_i32(cursor, '\x59\x89\x8a\xbc'); cursor += 4;
                 store_i32(cursor, '\x04\x00\x00\xc3'); cursor += 4;
             }
+
+            // 他シーンのlayer_dispが-1になっている部分に関して、編集をしても整合性が取れるようにする
+            {
+                {
+                    /* flag8のset_undoにてlayer_dispを保存している部分をlayer_setにする
+                        1008d373 8b54c104           mov     edx,dword ptr [ecx+eax*8+04]
+                        1008d377 8d04c1             lea     eax,dword ptr [ecx+eax*8]
+                        ↓
+                        1008d373 6690               nop
+                        1008d375 e8XxXxXxXx         call    cursor
+
+                        cursor00 8d04c1             lea     eax,dword ptr [ecx+eax*8]
+                        cursor03 8b90c0050000       mov     edx,dword ptr [eax+000005c0]
+                        cursor09 c3                 ret
+                    */
+                    OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8d373, 7);
+                    h.store_i32(0, '\x66\x90\xe8\x00');
+                    h.replaceNearJmp(3, cursor);
+                    static const char code_put[] = {
+                        "\x8d\x04\xc1"             // lea     eax,dword ptr [ecx+eax*8]
+                        "\x8b\x90\xc0\x05\x00\x00" // mov     edx,dword ptr [eax+000005c0]
+                        "\xc3"                     // ret
+                    };
+                    memcpy(cursor, code_put, sizeof(code_put) - 1); cursor += sizeof(code_put) - 1;
+                }
+                {
+                    /* flag8のrun_undoにて他シーンのlayer_dispは-1にする
+                        1008d5cb 8b4d10             mov     ecx,dword ptr [ebp+10]
+                        1008d5ce 894c1604           mov     dword ptr [esi+edx+04],ecx
+                        ↓
+                        1008d5cb 55                 push    ebp ; undodata
+                        1008d5cc 56                 push    esi ; object_ofs
+                        1008d5cd e8XxXxXxXx         call    newfunc
+                    */
+                    OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8d5cb, 7);
+                    h.store_i32(0, '\x55\x56\xe8\x00');
+                    h.replaceNearJmp(3, &run_undo_flag8_layer_disp);
+                }
+                {
+                    /* flag0のrun_undoにてlayer_dispを-1にするかlayer_setにするかの判定を追加
+                        1008d6b2 b972010000         mov     ecx,00000172
+                        1008d6b7 f3a5               rep     movsd
+                        ↓
+                        1008d6b2 52                 push    edx
+                        1008d6b3 e8XxXxXxXx         call    cursor
+                        1008d6b8 5a                 pop     edx
+
+                        cursor00 50                 push    eax
+                        cursor01 56                 push    esi
+                        cursor02 57                 push    edi
+                        cursor03 e8XxXxXxXx         call    nesfunc
+                        cursor09 c3                 ret
+                    */
+                    OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8d6b2, 7);
+                    h.store_i16(0, '\x52\xe8');
+                    h.replaceNearJmp(2, cursor);
+                    h.store_i8(6, '\x5a');
+
+                    store_i32(cursor, '\x50\x56\x57\xe8'); cursor += 4;
+                    store_i32(cursor, (uint32_t)run_undo_flag0 - (uint32_t)(cursor + 4)); cursor += 4;
+                    store_i8(cursor, '\xc3'); cursor++;
+                }
+            }
+
 
             // 動画ファイル合成のコンボボックスを変更してもUndoデータが生成されない
             {

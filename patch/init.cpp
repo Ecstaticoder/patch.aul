@@ -138,6 +138,10 @@ void init_t::InitAtPatchLoaded() {
 void init_t::InitAtExeditLoad() {
 	mywindow.init();
 
+#ifdef PATCH_SWITCH_UPDATE_COUNT
+	patch::update_count.init();
+#endif
+
 #ifdef PATCH_SWITCH_THEME_CC
 	patch::theme_cc.init();
 #endif
@@ -369,6 +373,9 @@ void init_t::InitAtExeditLoad() {
 #endif
 #ifdef PATCH_SWITCH_SCENE_VRAM
 	patch::scene_vram.init();
+#endif
+#ifdef PATCH_SWITCH_AUDIO_EE_MAIN
+	patch::audio_ee_main.init();
 #endif
 #ifdef PATCH_SWITCH_AUDIO_LAYER_END
 	patch::audio_layer_end.init();
