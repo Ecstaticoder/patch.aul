@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_67"
+#define PATCH_VERSION_STR "r43_ss_68"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -173,9 +173,12 @@
 #define PATCH_SWITCH_OBJ_MOTIONBLUR obj_motionblur
 #define PATCH_SWITCH_OBJ_PORTIONFILTER obj_portionfilter
 #define PATCH_SWITCH_OBJ_GROUPCONTROL obj_groupcontrol
+#define PATCH_SWITCH_OBJ_NORMALPLAY obj_normalplay
+#define PATCH_SWITCH_OBJ_VOLUMEFADE obj_volumefade
 #define PATCH_SWITCH_BORDER_ONLY_TEXT border_only_text
 #define PATCH_SWITCH_RCLICKMENU_SPLIT rclickmenu_split
 // #define PATCH_SWITCH_RCLICKMENU_DELETE rclickmenu_delete // undo追加更新により不要に
+#define PATCH_SWITCH_MIDPT_DELETE midpt_delete
 #define PATCH_SWITCH_BLEND blend
 #define PATCH_SWITCH_ADD_EXTENSION add_extension
 #define PATCH_SWITCH_DIALOG_NEW_FILE dlg_newfile
@@ -183,6 +186,7 @@
 #define PATCH_SWITCH_SCENE_CACHE scenecache
 #define PATCH_SWITCH_SCENE_VRAM scenevram
 #define PATCH_SWITCH_AUDIO_EE_MAIN audio_ee_main
+#define PATCH_SWITCH_AUDIO_EFPI_INIT audio_efpi_init
 #define PATCH_SWITCH_AUDIO_LAYER_END audio_layer_end
 // #define PATCH_SWITCH_AUDIO_PREPROCESS audio_preprocess
 #define PATCH_SWITCH_PLAYBACK_SPEED pb_speed

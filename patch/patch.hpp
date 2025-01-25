@@ -185,3 +185,7 @@
 #include "patch_swap_filter.hpp"
 #include "patch_audio_ee_main.hpp"
 #include "update_count.hpp"
+#include "patch_obj_volumefade.hpp"
+#include "patch_obj_normalplay.hpp"
+#include "patch_audio_efpi_init.hpp"
+#include "patch_midpt_delete.hpp"

@@ -36,10 +36,8 @@ namespace patch {
 
     inline class avi_file_handle_close_t {
 
-        static void __cdecl delete_all_object_wrap() {
-            reinterpret_cast<void(__cdecl*)()>(GLOBAL::exedit_base + OFS::ExEdit::delete_all_object)();
-            reinterpret_cast<void(__cdecl*)()>(GLOBAL::exedit_base + OFS::ExEdit::avi_handle_free)();
-        }
+        static void __cdecl avi_handle_close_wrap(ExEdit::Filter*);
+        static void __cdecl delete_all_object_wrap();
 
         bool enabled = true;
         bool enabled_i;
@@ -57,6 +55,18 @@ namespace patch {
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x6858, 5);
                 h.store_i32(0, '\x0f\x1f\x44\x00');
                 h.store_i8(4, '\x00');
+            }
+            { // audio file （動画ファイルと連携のみ）
+                /*
+                    1009023a 57                 push    edi
+                    1009023b e8e04bf7ff         call    10004e20
+                    ↓
+                    1009023a 56                 push    esi
+                    1009023b e8XxXxXxXx         call    newfunc
+                */
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x9023a, 5);
+                h.store_i8(0, '\x56');
+                h.replaceNearJmp(2, &avi_handle_close_wrap);
             }
 
             { // WndProc WM_FILTER_FILE_CLOSE にてハンドルを全て解放する

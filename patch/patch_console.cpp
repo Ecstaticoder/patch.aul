@@ -18,7 +18,6 @@
 
 #include <chrono>
 #include <format>
-#include "patch_console.hpp"
 
 namespace patch {
 

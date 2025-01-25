@@ -270,6 +270,12 @@ public:
             #ifdef PATCH_SWITCH_OBJ_GROUPCONTROL
                 patch::GroupControl.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_OBJ_VOLUMEFADE
+                patch::VolumeFade.switch_load(cr);
+            #endif
+            #ifdef PATCH_SWITCH_OBJ_NORMALPLAY
+                patch::NormalPlay.switch_load(cr);
+            #endif
             #ifdef PATCH_SWITCH_SETTINGDIALOG_NEXT
                 patch::dialog_next.switch_load(cr);
             #endif
@@ -290,6 +296,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_RCLICKMENU_DELETE
                 patch::rclickmenu_delete.switch_load(cr);
+            #endif
+            #ifdef PATCH_SWITCH_MIDPT_DELETE
+                patch::midpt_delete.switch_load(cr);
             #endif
             #ifdef PATCH_SWITCH_BLEND
                 patch::blend.switch_load(cr);
@@ -314,6 +323,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_AUDIO_EE_MAIN
                 patch::audio_ee_main.switch_load(cr);
+            #endif
+            #ifdef PATCH_SWITCH_AUDIO_EFPI_INIT
+                patch::audio_efpi_init.switch_load(cr);
             #endif
             #ifdef PATCH_SWITCH_AUDIO_LAYER_END
                 patch::audio_layer_end.switch_load(cr);
@@ -983,6 +995,12 @@ public:
             #ifdef PATCH_SWITCH_OBJ_GROUPCONTROL
                 patch::GroupControl.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_OBJ_VOLUMEFADE
+                patch::VolumeFade.switch_store(switch_);
+            #endif
+            #ifdef PATCH_SWITCH_OBJ_NORMALPLAY
+                patch::NormalPlay.switch_store(switch_);
+            #endif
             #ifdef PATCH_SWITCH_SETTINGDIALOG_NEXT
                 patch::dialog_next.switch_store(switch_);
             #endif
@@ -1003,6 +1021,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_RCLICKMENU_DELETE
                 patch::rclickmenu_delete.switch_store(switch_);
+            #endif
+            #ifdef PATCH_SWITCH_MIDPT_DELETE
+                patch::midpt_delete.switch_store(switch_);
             #endif
             #ifdef PATCH_SWITCH_BLEND
                 patch::blend.switch_store(switch_);
@@ -1027,6 +1048,9 @@ public:
             #endif
             #ifdef PATCH_SWITCH_AUDIO_EE_MAIN
                 patch::audio_ee_main.switch_store(switch_);
+            #endif
+            #ifdef PATCH_SWITCH_AUDIO_EFPI_INIT
+                patch::audio_efpi_init.switch_store(switch_);
             #endif
             #ifdef PATCH_SWITCH_AUDIO_LAYER_END
                 patch::audio_layer_end.switch_store(switch_);

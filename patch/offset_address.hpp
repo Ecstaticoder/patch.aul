@@ -33,6 +33,8 @@ namespace OFS {
 
 		constexpr i32 ini_shiftselect = 0x086398;
 
+		constexpr i32 vram_yc_size = 0x08562c;
+
 		constexpr i32 get_exe_dir = 0x02c8c0;
 
 		constexpr i32 filter_change_size_ptr = 0x0814e8;
@@ -264,6 +266,8 @@ namespace OFS {
 		constexpr i32 efSceneChange_ptr = 0x0b7f80;
 		constexpr i32 efPortionFilter_ptr = 0x0a92c0;
 		constexpr i32 efGlare_ptr = 0x0a6040;
+		constexpr i32 efNormalPlay_ptr = 0x0b8870;
+		constexpr i32 efVolumeFade_ptr = 0x0a5810;
 
 		constexpr i32 Map_var_ptr = 0x1bace8;
 
@@ -374,6 +378,7 @@ namespace OFS {
 		constexpr i32 DrawTimelineMask = 0x0392f0;
 		constexpr i32 InitScrollHorizonal = 0x038d30;
 		constexpr i32 disp_settingdialog = 0x039550;
+		constexpr i32 disp_settingdialog_ofi = 0x4b1d0;
 		constexpr i32 filter_sendmessage = 0x04a1a0;
 		constexpr i32 get_near_object_idx = 0x0445a0;
 		constexpr i32 TraScript_ProcessingObjectIndex = 0x1b2b04;

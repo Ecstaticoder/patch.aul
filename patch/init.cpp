@@ -333,6 +333,12 @@ void init_t::InitAtExeditLoad() {
 #ifdef PATCH_SWITCH_OBJ_GROUPCONTROL
 	patch::GroupControl.init();
 #endif
+#ifdef PATCH_SWITCH_OBJ_VOLUMEFADE
+	patch::VolumeFade.init();
+#endif
+#ifdef PATCH_SWITCH_OBJ_NORMALPLAY
+	patch::NormalPlay.init();
+#endif
 
 #ifdef PATCH_SWITCH_SETTINGDIALOG_NEXT
 	patch::dialog_next.init();
@@ -355,6 +361,9 @@ void init_t::InitAtExeditLoad() {
 #endif
 #ifdef PATCH_SWITCH_RCLICKMENU_DELETE
 	patch::rclickmenu_delete.init();
+#endif
+#ifdef PATCH_SWITCH_MIDPT_DELETE
+	patch::midpt_delete.init();
 #endif
 #ifdef PATCH_SWITCH_BLEND
 	patch::blend.init();
@@ -379,6 +388,9 @@ void init_t::InitAtExeditLoad() {
 #endif
 #ifdef PATCH_SWITCH_AUDIO_LAYER_END
 	patch::audio_layer_end.init();
+#endif
+#ifdef PATCH_SWITCH_AUDIO_EFPI_INIT
+	patch::audio_efpi_init.init();
 #endif
 #ifdef PATCH_SWITCH_AUDIO_PREPROCESS
 	patch::audio_preprocess.init();
@@ -652,6 +664,7 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 
 	LPCSTR filename = PathFindFileNameA(lpLibFileName);
 	if (lstrcmpiA(filename, "exedit.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
 		GLOBAL::exedit_hmod = ret;
 		auto filters = reinterpret_cast<AviUtl::GetFilterTableList_t>(GetProcAddress(ret, reinterpret_cast<LPCSTR>(GLOBAL::aviutl_base + OFS::AviUtl::str_GetFilterTableList)))();
 		if (strcmp(filters[0]->information, "拡張編集(exedit) version 0.92 by ＫＥＮくん") != 0) {
@@ -667,6 +680,7 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 	}
 #ifdef PATCH_SWITCH_CANCEL_BOOST_CONFLICT
 	else if (lstrcmpiA(filename, "Boost.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
 		if (auto ptr = search_import(ret, cstr_kernel32_dll.get(), cstr_GetModuleHandleA.get())) {
 			OverWriteOnProtectHelper(ptr, 4).store_i32(0, &init_t::Boost_GetModuleHandleA_Wrap);
 		}
@@ -695,11 +709,13 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 #endif
 #ifdef PATCH_SWITCH_SCRIPT_SORT_PATCH
 	else if (lstrcmpiA(filename, "script_sort.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
 		patch::patch_script_sort.init(ret);
 	}
 #endif
 #ifdef PATCH_SWITCH_SETTINGDIALOG_CHROMAKEY
 	else if (lstrcmpiA(filename, "WideDialog.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
 		patch::dialog_chromakey.switching(false);
 	}
 #endif

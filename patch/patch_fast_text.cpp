@@ -71,7 +71,6 @@ namespace patch::fast {
 		return map.try_emplace(*lplf, ::CreateFontIndirectW(lplf)).first->second.font;
 	}
 
-
 	DWORD WINAPI text_t::GetGlyphOutlineW(HDC hdc, UINT uChar, UINT fuFormat, LPGLYPHMETRICS lpgm, DWORD cjBuffer, LPVOID pvBuffer, CONST MAT2* lpmat2) {
 		auto font = reinterpret_cast<HFONT>(GetCurrentObject(hdc, OBJ_FONT));
 
