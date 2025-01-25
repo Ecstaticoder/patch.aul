@@ -2,7 +2,7 @@ patch.aul r43beta1
 © 2021-2023 ePi
 https://scrapbox.io/ePi5131/patch.aul
 
-patch.aul r43_ss_67
+patch.aul r43_ss_68
 https://scrapbox.io/nazosauna/patch.aul
 
 概要
@@ -214,6 +214,10 @@ https://scrapbox.io/nazosauna/patch.aul
     ・テキストで縦書にしている時に制御文字でフォントを変えると正常ではないのを修正
     ・音声波形表示（編集全体の音声を元にする）など、音を複数回取得する時に音がおかしくなるのをキャッシュで対策
     ・改行のみのテキストに画像ループを付けると例外になるのを修正
+    ・音声オブジェクトのトラックバー変化方法にランダム移動を適用すると、SEED値が正常でないのを修正
+    ・標準再生・音量フェードでの音量変化が滑らかになるように修正
+    ・音量フェードでの合計秒数がオブジェクトの長さ以上の場合に正しく計算されるように変更
+    ・中間点を削除した時に設定ダイアログが正常に更新されないことがあるのを修正
 
     追加
     ・コンソールの表示
@@ -396,12 +400,15 @@ https://scrapbox.io/nazosauna/patch.aul
         "obj_motionblur" : boolean, ; モーションブラーの間隔が負の値になった時にエラーとなるのを修正 (既定値: true)
         "obj_portionfilter" : boolean, ; 部分フィルタがスレッド数より小さいサイズに対して正常に反映されないバグを修正 / (ファイルから選択)でファイルパスを表示する (既定値: true)
         "obj_groupcontrol" : boolean, ; グループ制御がチェックで無効になっている際にフィルタ効果が実行されるのを修正 (既定値: true)
+        "obj_volumefade" : boolean, ; 音量フェードの修正 (既定値: true)
+        "obj_normalplay" : boolean, ; 標準再生の修正 (既定値: true)
         "settingdialog_next : boolean, ; 中間点オブジェクトを消した際に次の選択がされないことがあるのを修正/オブジェクトを消した際、次に選択されるオブジェクトを変更 (既定値: true)
         "settingdialog_color_picker" : boolean, ; クロマキーやカラーキーなどで、色の取得ボタンを押した状態でもう一度押すと色選択ダイアログが出るように変更 (既定値: true)
         "settingdialog_excolorconfig" : boolean, ; 拡張色変換のウィンドウが下のフィルタに被るのを修正 (既定値: true)
         "settingdialog_chromakey" : boolean, ; クロマキーの透過補正チェックは色彩補正チェック有りの時のみ表示するように変更 (既定値: true)
         "settingdialog_scriptcontrol" : boolean, ; スクリプト制御を折り畳むことで次のスクリプト制御のエディットボックスが表示されるように修正 (既定値: true)
         "r_click_menu_split" : boolean, ; 右クリック分割で設定ダイアログが更新されないのを修正 (既定値: true)
+        "midpt_delete" : boolean, ; 中間点の削除をすると設定ダイアログが正常に更新されないことがあるのを修正 (既定値: true)
         "blend" : boolean, ; アルファチャンネルのあるフレームバッファで合成モード「通常」以外を使用すると誤った結果になるのを修正 (既定値: true)
         "add_extension" : boolean, ; 動画、音声ファイル参照の時、exedit.iniにある拡張子を追加する (既定値: true)
         "new_project_editbox" : boolean, ; 新規プロジェクト作成ダイアログの画像サイズ入力欄の幅を広げる (既定値: true)
@@ -409,6 +416,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "scene_cache" : boolean, ; シーン画像生成に時間がかかった時にキャッシュを作成する機能の追加 (既定値: true)
         "scene_vram" : boolean, ; フィルタオブジェクトのレンズブラーやぼかしフィルタなどをシーンで読むとエラーとなるのを修正 (既定値: true)
         "audio_ee_main" : boolean, ; 拡張編集(音声)にて音のキャッシュを取る (既定値: true)
+        "audio_efpi_init" : boolean, ; 音声オブジェクトのトラックバー変化方法にランダム移動を適用すると、SEED値が正常でないのを修正 (既定値: true)
         "audio_layer_end" : boolean, ; 拡張編集の音声処理のメイン関数0x49ca0にて最終レイヤー指定が機能していなかったのを修正 (既定値: true)
         "playback_speed" : boolean, ; 中間点と再生速度の関連バグの修正 (既定値: true)
         "playback_pos" : boolean, ; 再生位置をトラックバー移動にしてループ再生した時の再生位置が正しくないのを修正 (既定値: true)
@@ -495,7 +503,7 @@ https://scrapbox.io/nazosauna/patch.aul
 Lua追加要素詳細
     _PATCH
         patch.aulのバージョン情報
-        例として "patch.aul r43_ss_67" のような文字列が格納されている
+        例として "patch.aul r43_ss_68" のような文字列が格納されている
 
     obj.randex(seed,frame)
         seed : integer
