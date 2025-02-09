@@ -28,6 +28,7 @@ namespace patch {
 
     // init at exedit load
     // YC_RGB変換の際に幅0のオブジェクトが渡されたときにエラーとなるのを修正(主に改行のみのテキスト)
+    // 横幅が奇数サイズのバッファでエラーとなることがあるのを修正
 
     inline class yc_rgb_conv_t {
 
