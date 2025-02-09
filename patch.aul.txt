@@ -2,7 +2,7 @@ patch.aul r43beta1
 © 2021-2023 ePi
 https://scrapbox.io/ePi5131/patch.aul
 
-patch.aul r43_ss_68
+patch.aul r43_ss_69
 https://scrapbox.io/nazosauna/patch.aul
 
 概要
@@ -51,6 +51,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・obj.randでs=-2^31,e=2^31-1とすると例外になる
     ・obj.getvalueで中心座標(cx,cy,cz)、フレーム番号(frame)、総フレーム数(totalframe)、総時間(totaltime)を取得できるように
     ・obj.getvalue("layerX.time")が正しい値を取得できるように
+    ・obj.load("text")にてサイズがおかしいことがあるのを修正
     ・拡張編集ウィンドウと設定ダイアログの描画の最適化
     ・拡張編集ウィンドウの上部をドラッグしても正常にリサイズができるように
     ・元に戻す の多数のバグ修正
@@ -218,6 +219,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・標準再生・音量フェードでの音量変化が滑らかになるように修正
     ・音量フェードでの合計秒数がオブジェクトの長さ以上の場合に正しく計算されるように変更
     ・中間点を削除した時に設定ダイアログが正常に更新されないことがあるのを修正
+    ・スクリプトからのYCA_RGBA変換の際に横幅が奇数サイズのバッファでエラーとなることがあるのを修正
 
     追加
     ・コンソールの表示
@@ -256,7 +258,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・やり直し 機能
         元に戻すの逆
 
-    ・テキストオブジェクトに 縁のみ 縁のみ(細) を追加
+    ・テキストオブジェクトに 縁のみ 縁のみ(細) ｱﾝﾁｴｲﾘｱｽ無し を追加
     ・エッジ抽出の色選択に 色指定無し を追加
     ・グラデーションの形状に 円ループ 四角ループ 凸ループ 凸ループ2 を追加
 
@@ -424,7 +426,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "shared_cache" : boolean, ; 一部キャッシュは共有メモリ(システムの設定のキャッシュサイズの部分)を使用するように変更 (既定値: true)
         "warning_duplicate" : boolean, ; ファイル名が同じプラグインが複数フォルダに存在するときに警告出す (既定値: true)
         "rendering" : boolean, ; 描画のバグを修正 (既定値: true)
-        "yc_rgb_conv" : boolean, ; 改行のみのテキストで一部スクリプトを使うとエラーが発生するのを修正 (既定値: true)
+        "yc_rgb_conv" : boolean, ; 改行のみのテキストで一部スクリプトを使うとエラーが発生するのを修正、横幅が奇数サイズのバッファでエラーとなることがあるのを修正 (既定値: true)
         "camera_scene" : boolean, ; カメラ制御とシーンの入れ子で描画が正常でなくなるの修正 (既定値: true)
         "group_camera_scene" : boolean, ; グループ制御とカメラ制御を併用しているシーンを呼び出すと起こる不具合を修正 (既定値: true)
         "change_disp_scene" : boolean, ; シーン切り替え時のバグを修正 (既定値: true)
@@ -439,6 +441,7 @@ https://scrapbox.io/nazosauna/patch.aul
         "group_id" : boolean, ; プロジェクトファイル読み込み時にグループ化IDの最大値が高い場合、整理する (既定値: true)
         "sat_rgb_space" : boolean, ; RGB色空間で飽和の処理を微調整 (既定値: true)
         "borderonly_text" : boolean, ; テキストに縁のみを追加する。fast.textborderがtrueの必要あり (既定値: true)
+        "ggo_bitmap_text" : boolean, ; テキストにｱﾝﾁｴｲﾘｱｽ無しを追加する。borderonly_textがtrueの必要あり (既定値: true)
         "update_count" : boolean, ; トラックバーなど変更を検知するためのパッチ。他の機能を動かすために必要になる (既定値: true)
         "patch_script_sort" : boolean, ; スクリプト並び替え管理プラグインとの競合を解消 (既定値: true)
         "undo" : boolean, ; 元に戻す 関連のバグ修正 (既定値: true)
@@ -451,10 +454,11 @@ https://scrapbox.io/nazosauna/patch.aul
         "lua" : boolean, ; lua.*配下のスイッチの主電源 (既定値: true)
             "lua.env" : boolean, ; Luaの環境を統一する (既定値: false)
             "lua.path" : boolean, ; package.path,cpathにパスを追加 (既定値: false)
+            "lua.load" : boolean, ; load("text")でサイズが正しくないことがあるのを修正 (既定値: true)
             "lua.getvalue" : boolean, ; getvalueで中心座標を取得できるように (既定値: true)
             "lua.rand" : boolean, ; rand関数で例外になるパターンを潰す (既定値: true)
             "lua.randex" : boolean, ; 正確な乱数を提供するrandexクラスの追加 (既定値: true)
-            "lua_setanchor" : boolean, ; setanchorを使っているスクリプトが正常に描画できないことがあるのを修正 (既定値: true)
+            "lua.setanchor" : boolean, ; setanchorを使っているスクリプトが正常に描画できないことがあるのを修正 (既定値: true)
         "exfilter" : boolean, ; 拡張編集用フィルタの追加 (既定値: true)
             "exfilter.flash" : boolean, ; フィルタオブジェクトの閃光を追加 (既定値: true)
             "exfilter.convexedge" : boolean, ; フィルタオブジェクトの凸エッジを追加 (既定値: true)
@@ -503,7 +507,7 @@ https://scrapbox.io/nazosauna/patch.aul
 Lua追加要素詳細
     _PATCH
         patch.aulのバージョン情報
-        例として "patch.aul r43_ss_68" のような文字列が格納されている
+        例として "patch.aul r43_ss_69" のような文字列が格納されている
 
     obj.randex(seed,frame)
         seed : integer
