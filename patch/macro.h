@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_68"
+#define PATCH_VERSION_STR "r43_ss_69"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -176,6 +176,7 @@
 #define PATCH_SWITCH_OBJ_NORMALPLAY obj_normalplay
 #define PATCH_SWITCH_OBJ_VOLUMEFADE obj_volumefade
 #define PATCH_SWITCH_BORDER_ONLY_TEXT border_only_text
+#define PATCH_SWITCH_GGO_BITMAP_TEXT ggo_bitmap_text
 #define PATCH_SWITCH_RCLICKMENU_SPLIT rclickmenu_split
 // #define PATCH_SWITCH_RCLICKMENU_DELETE rclickmenu_delete // undo追加更新により不要に
 #define PATCH_SWITCH_MIDPT_DELETE midpt_delete
@@ -229,6 +230,7 @@
 #define PATCH_SWITCH_LUA lua
 #ifdef PATCH_SWITCH_LUA
 	#define PATCH_SWITCH_LUA_ENV lua_env
+	#define PATCH_SWITCH_LUA_LOAD lua_load
 	#define PATCH_SWITCH_LUA_GETVALUE lua_getvalue
 	#define PATCH_SWITCH_LUA_RAND lua_rand
 	#define PATCH_SWITCH_LUA_RANDEX lua_randex

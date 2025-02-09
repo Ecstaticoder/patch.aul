@@ -34,8 +34,6 @@ namespace patch {
 		bool enabled = true;
 		bool enabled_i;
 
-		inline static int expand_type_flag;
-
 		inline static const char key[] = "borderonly_text";
 
 		inline static const char border_only_str[] = "縁のみ";

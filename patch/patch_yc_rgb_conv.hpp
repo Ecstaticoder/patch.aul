@@ -32,6 +32,8 @@ namespace patch {
     inline class yc_rgb_conv_t {
 
         static void __cdecl do_multi_thread_func_wrap(AviUtl::MultiThreadFunc func, BOOL flag);
+        static void __cdecl bgra2yca_mt(int thread_id, int thread_num, void* n1, void* n2);
+        static void __cdecl bgra2yca_u_mt(int thread_id, int thread_num, void* n1, void* n2);
 
         bool enabled = true;
         bool enabled_i;
@@ -42,18 +44,24 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            {   // rgb2yc normal
+            {   // bgr2yca
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x6f585, 28);
                 h.replaceNearJmp(0, do_multi_thread_func_wrap);
                 h.replaceNearJmp(24, do_multi_thread_func_wrap);
             }
-            {   // rgb2yc
-                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x6f8a3, 31);
-                h.replaceNearJmp(0, do_multi_thread_func_wrap);
-                h.replaceNearJmp(27, do_multi_thread_func_wrap);
+            {   // bgra2yca
+
+                constexpr int vp_begin = 0x6f85f;
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x6f8bd - vp_begin);
+
+                h.store_i32(0x6f85f - vp_begin, '\x66\x0f\x1f\x44');
+                h.store_i16(0x6f863 - vp_begin, '\x00\x00');
+                h.store_i32(0x6f89e - vp_begin, &bgra2yca_u_mt);
+                h.store_i32(0x6f8b9 - vp_begin, &bgra2yca_mt);
+
             }
 
-            {   // yc2rgb
+            {   // yca2bgra
                 ReplaceNearJmp(GLOBAL::exedit_base + 0x6fbb8, do_multi_thread_func_wrap);
                 // もう1つの方は置き換え不要
             }

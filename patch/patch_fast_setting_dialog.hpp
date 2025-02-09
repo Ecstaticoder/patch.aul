@@ -40,7 +40,7 @@ namespace patch {
 
 		bool enabled = true;
 		bool enabled_i;
-		inline static const char key[] = "fast_settingdialog";
+		inline static const char key[] = "fast.settingdialog";
 
 	public:
 

@@ -399,6 +399,9 @@ public:
             #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
                 patch::borderonly_text.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_GGO_BITMAP_TEXT
+                patch::ggo_bitmap_text.switch_load(cr);
+            #endif
             #ifdef PATCH_SWITCH_UPDATE_COUNT
                 patch::update_count.switch_load(cr);
             #endif
@@ -419,6 +422,11 @@ public:
                 
             #ifdef PATCH_SWITCH_LUA
                 patch::lua.switch_load(cr);
+
+                #ifdef PATCH_SWITCH_LUA_LOAD
+                    patch::lua_load.switch_load(cr);
+                #endif
+
                 #ifdef PATCH_SWITCH_LUA_GETVALUE
                     patch::lua_getvalueex.switch_load(cr);
                 #endif
@@ -1124,6 +1132,9 @@ public:
             #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
                 patch::borderonly_text.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_GGO_BITMAP_TEXT
+                patch::ggo_bitmap_text.switch_store(switch_);
+            #endif
             #ifdef PATCH_SWITCH_UPDATE_COUNT
                 patch::update_count.switch_store(switch_);
             #endif
@@ -1144,6 +1155,10 @@ public:
                 
             #ifdef PATCH_SWITCH_LUA
                 patch::lua.switch_store(switch_);
+                #ifdef PATCH_SWITCH_LUA_LOAD
+                    patch::lua_load.switch_store(switch_);
+                #endif
+
                 #ifdef PATCH_SWITCH_LUA_GETVALUE
                     patch::lua_getvalueex.switch_store(switch_);
                 #endif

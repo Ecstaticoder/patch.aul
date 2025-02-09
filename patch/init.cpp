@@ -458,6 +458,9 @@ void init_t::InitAtExeditLoad() {
 #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
 	patch::borderonly_text.init();
 #endif
+#ifdef PATCH_SWITCH_GGO_BITMAP_TEXT
+	patch::ggo_bitmap_text.init();
+#endif
 	
 	patch::setting_dialog();
 
@@ -838,7 +841,10 @@ BOOL __cdecl init_t::func_initWrap(AviUtl::FilterPlugin* fp) {
 
 #ifdef PATCH_SWITCH_LUA
 	patch::lua.init();
-
+	
+	#ifdef PATCH_SWITCH_LUA_LOAD
+		patch::lua_load.init();
+	#endif
 	#ifdef PATCH_SWITCH_LUA_RAND
 		patch::lua_rand.init();
 	#endif
@@ -855,12 +861,12 @@ BOOL __cdecl init_t::func_initWrap(AviUtl::FilterPlugin* fp) {
 		patch::lua_setanchor.init();
 	#endif
 
+#endif
+
 	#ifdef PATCH_SWITCH_WARNING_DUPLICATE_PLUGINS
 		// 本当はexeditが無くても動くようにするのが良さそうだけど面倒なのでここに
 		patch::WarningDuplicate.init();
 	#endif
-
-#endif
 
 	return TRUE;
 }

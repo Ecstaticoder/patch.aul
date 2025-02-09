@@ -189,3 +189,5 @@
 #include "patch_obj_normalplay.hpp"
 #include "patch_audio_efpi_init.hpp"
 #include "patch_midpt_delete.hpp"
+#include "patch_ggo_bitmap_text.hpp"
+#include "patch_lua_load.hpp"

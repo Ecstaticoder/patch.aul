@@ -38,6 +38,7 @@ namespace patch::fast {
 		if (high_precision) {
 			height *= 2;
 		}
+		current_high_precision_flag = high_precision;
 
 		wchar_t fontname_w[LF_FACESIZE + 1];
 		int ofs = 0;
@@ -71,6 +72,61 @@ namespace patch::fast {
 		return map.try_emplace(*lplf, ::CreateFontIndirectW(lplf)).first->second.font;
 	}
 
+	void ggobitmap_2_ggogray8(LPGLYPHMETRICS lpgm, LPVOID pvBuffer) {
+		int srcline = ((lpgm->gmBlackBoxX + 31) >> 5) << 2;
+		int dstline = (lpgm->gmBlackBoxX + 3) & 0xfffffffc;
+		for (int y = lpgm->gmBlackBoxY - 1; 0 <= y; y--) {
+			auto src = (uint8_t*)pvBuffer + srcline * y + (lpgm->gmBlackBoxX >> 3);
+			auto dst = (uint8_t*)pvBuffer + dstline * y + lpgm->gmBlackBoxX;
+
+			{
+				int size = dstline - lpgm->gmBlackBoxX;
+				if (0 < size) {
+					memset(dst, 0, size);
+				}
+			}
+
+			{
+				int bit = 1 << (8 - (lpgm->gmBlackBoxX & 7));
+				auto v = *src;
+				for (int x = lpgm->gmBlackBoxX & 7; 0 < x; x--) {
+					dst--;
+					if (bit & v) {
+						*dst = 64;
+					} else {
+						*dst = 0;
+					}
+					bit <<= 1;
+				}
+				src--;
+			}
+
+			for (int x = lpgm->gmBlackBoxX >> 3; 0 < x; x--) {
+				auto v = *src;
+				for (int i = 8; 0 < i; i--) {
+					dst--;
+					*dst = (v & 1) << 6;
+					v >>= 1;
+				}
+				src--;
+			}
+		}
+	}
+
+	DWORD WINAPI GetGlyphOutlineW_cvt_ggogray8(HDC hdc, UINT uChar, UINT fuFormat, LPGLYPHMETRICS lpgm, DWORD cjBuffer, LPVOID pvBuffer, CONST MAT2* lpmat2) {
+		auto ret = ::GetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, cjBuffer, pvBuffer, lpmat2);
+		if (cjBuffer && pvBuffer) {
+			if (fuFormat == GGO_BITMAP) {
+				ggobitmap_2_ggogray8(lpgm, pvBuffer);
+			}
+		} else {
+			if (fuFormat == GGO_BITMAP) {
+				ret = ((lpgm->gmBlackBoxX + 3) & 0xfffffffc) * lpgm->gmBlackBoxY;
+			}
+		}
+		return ret;
+	}
+
 	DWORD WINAPI text_t::GetGlyphOutlineW(HDC hdc, UINT uChar, UINT fuFormat, LPGLYPHMETRICS lpgm, DWORD cjBuffer, LPVOID pvBuffer, CONST MAT2* lpmat2) {
 		auto font = reinterpret_cast<HFONT>(GetCurrentObject(hdc, OBJ_FONT));
 
@@ -81,7 +137,7 @@ namespace patch::fast {
 
 		auto itr = text.map.find(lfw);
 		if (itr == text.map.end()) {
-			return ::GetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, cjBuffer, pvBuffer, lpmat2);
+			return GetGlyphOutlineW_cvt_ggogray8(hdc, uChar, fuFormat, lpgm, cjBuffer, pvBuffer, lpmat2);
 		}
 		auto& glyph = itr->second.glyph_map;
 
@@ -100,13 +156,13 @@ namespace patch::fast {
 
 			return val.size;
 		}
-		auto size = ::GetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, 0, nullptr, lpmat2);
+		auto size = GetGlyphOutlineW_cvt_ggogray8(hdc, uChar, fuFormat, lpgm, 0, nullptr, lpmat2);
 		auto& val = glyph.try_emplace(glyphkey, size, text_detail::gettime(), lpgm, nullptr).first->second;
 		if (size == GDI_ERROR)return GDI_ERROR;
 
 
 		val.data.reset(new byte[size]);
-		::GetGlyphOutlineW(hdc, uChar, fuFormat, lpgm, size, val.data.get(), lpmat2);
+		GetGlyphOutlineW_cvt_ggogray8(hdc, uChar, fuFormat, lpgm, size, val.data.get(), lpmat2);
 
 		if (cjBuffer && pvBuffer) {
 			if (val.size == GDI_ERROR)return GDI_ERROR;
@@ -115,6 +171,7 @@ namespace patch::fast {
 
 		return size;
 	}
+
 
 	BOOL WINAPI text_t::DeleteObject(HGDIOBJ ho) {
 		std::lock_guard lock(text.mtx);

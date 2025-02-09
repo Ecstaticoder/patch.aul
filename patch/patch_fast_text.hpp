@@ -121,6 +121,8 @@ namespace patch::fast {
 		using GlyphValue = text_detail::GlyphValue;
 	public:
 
+		inline static int current_high_precision_flag = 1; // patch_lua_loadにて必要
+
 		static HFONT __cdecl MyCreateFont(const char* fontname, int height, int weight, BOOL italic, BOOL high_precision, BOOL vertical);
 		static HFONT WINAPI CreateFontIndirectW(const LOGFONTW* lplf);
 		static BOOL WINAPI DeleteObject(HGDIOBJ ho);
@@ -154,6 +156,7 @@ namespace patch::fast {
 			timer.set([this]() {
 				collect(release_time);
 			}, release_time * 1000);
+
 		}
 
 		void switching(bool flag) { enabled = flag; }

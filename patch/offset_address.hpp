@@ -437,6 +437,12 @@ namespace OFS {
 		constexpr i32 current_font_name = 0x236368;
 		constexpr i32 current_font_height = 0x23634c;
 
+		constexpr i32 script_setfont_name = current_font_name;
+		constexpr i32 script_setfont_size = current_font_height;
+		constexpr i32 script_setfont_type = 0x1b2b0c;
+		constexpr i32 script_setfont_col1 = 0x1b28e8;
+		constexpr i32 script_setfont_col2 = 0x1b28ec;
+
 		constexpr i32 ValidObjectNum = 0x146250;
 		constexpr i32 CurrentSceneObjectNum = 0x15918c;
 		constexpr i32 ObjectAllocNum = 0x1e0fa0;

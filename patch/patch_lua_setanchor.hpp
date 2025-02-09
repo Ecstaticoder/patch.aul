@@ -31,7 +31,7 @@ namespace patch {
     inline class lua_setanchor_t {
         bool enabled = true;
         bool enabled_i;
-        inline static const char key[] = "lua_setanchor";
+        inline static const char key[] = "lua.setanchor";
 
     public:
         void init() {

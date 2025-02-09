@@ -14,13 +14,18 @@
 */
 
 #include "patch_border_only_text.hpp"
+#include "patch_ggo_bitmap_text.hpp"
 
 #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
 namespace patch {
 
     void BorderOnlyText_t::cb_add_border() {
-        SendMessageA(*(HWND*)(GLOBAL::exedit_base + OFS::ExEdit::efTextShadowBorderComboHWND_ptr), CB_ADDSTRING, 0, (LPARAM)border_only_str);
-        SendMessageA(*(HWND*)(GLOBAL::exedit_base + OFS::ExEdit::efTextShadowBorderComboHWND_ptr), CB_ADDSTRING, 0, (LPARAM)border_thin_only_str);
+        HWND cb_hwnd = *(HWND*)(GLOBAL::exedit_base + OFS::ExEdit::efTextShadowBorderComboHWND_ptr);
+        SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)border_only_str);
+        SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)border_thin_only_str);
+        if (ggo_bitmap_text.is_enabled()) {
+            SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)ggo_bitmap_text.cb_str);
+        }
     }
     
     /*

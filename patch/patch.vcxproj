@@ -96,12 +96,14 @@
     <ClInclude Include="patch_fast_waveform.hpp" />
     <ClInclude Include="patch_fast_wipe.hpp" />
     <ClInclude Include="patch_fast_yc_filter_effect.hpp" />
+    <ClInclude Include="patch_ggo_bitmap_text.hpp" />
     <ClInclude Include="patch_group_camera_scene.hpp" />
     <ClInclude Include="patch_group_id.hpp" />
     <ClInclude Include="patch_image_data_cache.hpp" />
     <ClInclude Include="patch_init_window_pos.hpp" />
     <ClInclude Include="patch_keyconfig.hpp" />
     <ClInclude Include="patch_load_exedit_backup.hpp" />
+    <ClInclude Include="patch_lua_load.hpp" />
     <ClInclude Include="patch_lua_setanchor.hpp" />
     <ClInclude Include="patch_midpt_delete.hpp" />
     <ClInclude Include="patch_object_copy.hpp" />
