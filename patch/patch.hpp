@@ -191,3 +191,4 @@
 #include "patch_midpt_delete.hpp"
 #include "patch_ggo_bitmap_text.hpp"
 #include "patch_lua_load.hpp"
+#include "patch_relative_path.hpp"

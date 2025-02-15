@@ -128,6 +128,7 @@
     <ClInclude Include="patch_paste_pos.hpp" />
     <ClInclude Include="patch_playback_pos.hpp" />
     <ClInclude Include="patch_read_audio.hpp" />
+    <ClInclude Include="patch_relative_path.hpp" />
     <ClInclude Include="patch_rendering.hpp" />
     <ClInclude Include="patch_right_trackbar.hpp" />
     <ClInclude Include="patch_sat_rgb_space.hpp" />

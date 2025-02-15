@@ -280,9 +280,13 @@ namespace OFS {
 
 		constexpr i32 double_1000 = 0x09a3d0;
 		constexpr i32 double_1div65536 = 0x09a3f0;
-
+		
+		constexpr i32 get_str_semicolon_index = 0x08a1c0;
 		constexpr i32 extract_extension = 0x04e1d0;
 		constexpr i32 ini_extension_buf = 0x14cb58;
+		constexpr i32 image_extension_inited = 0x1a538c;
+		constexpr i32 image_extension_str = 0x1539e0;
+
 		constexpr i32 str_DOUGAFILE= 0x09df6c; // "動画ファイル"
 		constexpr i32 str_ONSEIFILE = 0x0ba698; // "音声ファイル"
 		constexpr i32 str_dot_exedit_backup = 0x0a5308;
@@ -427,9 +431,9 @@ namespace OFS {
 		constexpr i32 ExtendedFilter_wndcls = 0x02e872;
 
 		constexpr i32 loaded_spi_array = 0x2321f0;
-
 		constexpr i32 MyFindFirstFile = 0x04e220;
 		constexpr i32 MyFindNextFile = 0x04e270;
+		constexpr i32 LoadFile = 0x04e110;
 		constexpr i32 LoadSpi = 0x08a210;
 
 		constexpr i32 text_op_logfont_size = 0x050716;

@@ -716,6 +716,15 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 		patch::patch_script_sort.init(ret);
 	}
 #endif
+#ifdef PATCH_SWITCH_RELATIVE_PATH_PATCH
+	else if (lstrcmpiA(filename, "relative_path.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
+		auto filter = reinterpret_cast<AviUtl::GetFilterTable_t>(GetProcAddress(ret, reinterpret_cast<LPCSTR>(GLOBAL::aviutl_base + OFS::AviUtl::str_GetFilterTable)))();
+		if (strcmp(filter->information, "相対パスv0.9b by rikky") == 0) {
+			patch::patch_relative_path.init(ret);
+		}
+	}
+#endif
 #ifdef PATCH_SWITCH_SETTINGDIALOG_CHROMAKEY
 	else if (lstrcmpiA(filename, "WideDialog.auf") == 0) {
 		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode

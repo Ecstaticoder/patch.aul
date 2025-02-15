@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_69"
+#define PATCH_VERSION_STR "r43_ss_70test"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -150,6 +150,7 @@
 #define PATCH_SWITCH_FAILED_SJIS_MSGBOX failed_sjis
 #define PATCH_SWITCH_FAILED_LONGER_PATH failed_longpath
 #define PATCH_SWITCH_FAILED_FILE_DROP failed_filedrop
+#define PATCH_SWITCH_SUSIE_LOAD susie_load
 #define PATCH_SWITCH_SMALL_FILTER small_filter
 #define PATCH_SWITCH_OBJ_TEXT obj_text
 #define PATCH_SWITCH_OBJ_CREATE_FIGURE obj_create_figure
@@ -212,6 +213,7 @@
 #define PATCH_SWITCH_SAT_RGB_SPACE sat_rgb
 #define PATCH_SWITCH_UPDATE_COUNT update_count
 #define PATCH_SWITCH_SCRIPT_SORT_PATCH script_sort_patch
+#define PATCH_SWITCH_RELATIVE_PATH_PATCH relative_path_patch
 
 
 #define PATCH_SWITCH_UNDO undo

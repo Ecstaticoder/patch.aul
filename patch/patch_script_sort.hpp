@@ -49,11 +49,11 @@ namespace patch {
 
         inline static const char key[] = "patch_script_sort";
     public:
-        void init(HMODULE ret) {
+        void init(HMODULE hmod) {
             enabled_i = enabled;
             if (!enabled_i)return;
 
-            if (auto ptr = search_import(ret, cstr_user32_dll.get(), cstr_SetWindowLongA.get())) {
+            if (auto ptr = search_import(hmod, cstr_user32_dll.get(), cstr_SetWindowLongA.get())) {
                 OverWriteOnProtectHelper(ptr, 4).store_i32(0, &scipt_sort_SetWindowLongA_Wrap);
             }
         }
