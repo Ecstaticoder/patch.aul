@@ -73,7 +73,7 @@ namespace patch {
                 store_i32(cursor, '\xff\x85\xc0\xfd'); cursor += 4;
                 store_i32(cursor, '\xff\xff\x83\xbd'); cursor += 4;
                 store_i32(cursor, '\xc0\xfd\xff\xff'); cursor += 4;
-                store_i32(cursor, '\xc0\x0f\x8c\x00'); cursor += 3;
+                store_i32(cursor, '\x0c\x0f\x8c\x00'); cursor += 3;
                 store_i32(cursor, base + 0x191c - (int)cursor - 4); cursor += 4;
                 store_i8(cursor, '\xe9'); cursor++;
                 store_i32(cursor, base + 0x1b50 - (int)cursor - 4); cursor += 4;
