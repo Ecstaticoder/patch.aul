@@ -80,7 +80,6 @@ namespace patch {
 				cache_info* ptr = (cache_info*)a_exfunc->get_shared_mem((int)&audio_auf_func_proc_wrap, fpip->frame, NULL);
 				if (ptr != nullptr) {
 					if (ptr->audio_n_in == audio_n_in && ptr->audio_ch_in == audio_ch_in) {
-						printf("a");
 						fpip->audio_n = ptr->audio_n_out;
 						fpip->audio_ch = ptr->audio_ch_out;
 						int buf_size = fpip->audio_n * fpip->audio_ch * sizeof(*fpip->audiop);
