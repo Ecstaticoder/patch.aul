@@ -215,7 +215,7 @@ inline bool InjectFunction_fastcall(uint32_t address, void(*func)(), size_t asm_
 
 
 
-inline static void(__cdecl* push_new_args)(uint32_t function, int arg_ofs, int arg_n);
+inline static intptr_t __cdecl push_new_args(void* function, int arg_ofs, int arg_n);
 
 /// <summary>
 /// 指定したアドレスの関数の直前に、自分の関数を実行する
@@ -283,29 +283,69 @@ inline void InjectionFunction_push_args_cdecl(uint32_t address, const uint32_t f
 	h.replaceNearJmp(1, cursor0);
 }
 
-inline void init_util_magic() {
-	auto& cursor = GLOBAL::executable_memory_cursor;
+inline __declspec(naked) intptr_t __cdecl push_new_args(void* function, int arg_ofs, int arg_n) {
+    __asm {
+        push    ebx
+        add     ecx, edx
+        xor     ebx, ebx
+        lea     ecx, [esp + ecx * 4]
+        test    edx, edx
+        jle     skip
+			mov     ebx, edx
 
-	static const char bin_push_new_args[] = {
-		"\x53"                     // push    ebx
-		"\x03\xca"                 // add     ecx,edx
-		"\x33\xdb"                 // mov     ebx,00
-		"\x8d\x0c\x8c"             // mov     ecx,esp+ecx*4
-		"\x85\xd2"                 // test    edx
-		"\x7e\x0a"                 // jng     skip,0a
-		"\x8b\xda"                 // mov     ebx,edx
-		"\xff\x31"                 // push    dword ptr [ecx]
-		"\x83\xe9\x04"             // sub     ecx,+04
-		"\x4a"                     // dec     edx
-		"\x7f\xf8"                 // jg      back,08
-		"\xc1\xe3\x02"             // shl     ebx,02
-		"\xff\xd0"                 // call    eax
-		"\x03\xe3"                 // add     esp,ebx
-		"\x5b"                     // pop     ebx
-		"\xc3"                     // ret
-	};
-	(push_new_args) = reinterpret_cast<decltype(push_new_args)>(cursor);
+			back:
+				push    dword ptr [ecx]
+				sub     ecx, 4
+				dec     edx
+			jg      back
+		skip:
+        
+		shl     ebx, 2
+        call    eax
+        add     esp, ebx
+        pop     ebx
+        ret
+    }
+}
 
-	memcpy(cursor, bin_push_new_args, sizeof(bin_push_new_args) - 1);
-	cursor += sizeof(bin_push_new_args) - 1;
+
+/**
+ * @brief __fastcallのfuncを実行する。スタック除去のタイミングが問題にならないように実行できる
+ *
+ * @param func __fastcallの関数のポインタ
+ * @param arg_n funcの引数の数（最小3）
+ * @param arg0 1番目の引数
+ * @param arg1 2番目の引数
+ * @param arg2 3番目の引数
+ * @param ... 4番目以降の引数
+ * @return EAXでそのまま返す
+ *
+ * @note 引数が2個以下の場合はこの関数を経由する意味は無いため出来ないようにしました。func(arg0, arg1)で呼び出してください
+ * @warning 浮動小数や非32bitの引数は考慮していない
+ */
+inline __declspec(naked) intptr_t __cdecl fastcall_caller(void* func, int arg_n, intptr_t arg0, intptr_t arg1, intptr_t arg2, ...) {
+    __asm {
+        push ebp
+        mov ebp, esp
+        mov ecx, [ebp + 12]
+        sub ecx, 2
+        jg skip_arg_count_min
+			mov ecx, 1
+		skip_arg_count_min:
+        lea eax, [ebp + 20 + ecx*4]
+
+		push_args_loop:
+			push dword ptr [eax]
+			sub eax, 4
+        loop push_args_loop
+
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+        mov eax, [ebp + 8]
+        call eax
+
+        mov esp, ebp
+        pop ebp
+        ret
+    }
 }

@@ -38,9 +38,9 @@ namespace patch {
 
 
     BOOL __cdecl object_table_t::object_realloc_wrap(void** pointer, size_t size) {
-		int obj_ptr_old = *(int*)(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
+		int obj_ptr_old = (int)*pointer;
         BOOL r = reinterpret_cast<BOOL(__cdecl*)(void**, size_t)>(GLOBAL::exedit_base + OFS::ExEdit::MyRealloc)(pointer, size);
-		int obj_ptr_new = *(int*)(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
+		int obj_ptr_new = (int)*pointer;
         if (obj_ptr_new != obj_ptr_old) {
 			update_obj_ptr(obj_ptr_new - obj_ptr_old);
 			/*

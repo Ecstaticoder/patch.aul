@@ -55,7 +55,7 @@ namespace patch {
             // 拡張編集オブジェクトのバッファ再確保の際にアドレスが変わることで起こるエラーを対策
             ReplaceNearJmp(GLOBAL::exedit_base + 0x6d8bc, object_realloc_wrap);
 
-
+            
             // update_ObjectTablesでソートアルゴリズムを選択ソート→コムソートに変更
             {
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x2b18b, 7);
@@ -70,7 +70,7 @@ namespace patch {
                 h.store_i8(5, '\xe9');
                 h.store_i32(6, 0xc1); // jmp ee+0x2b31d
             }
-
+            
         }
         void switching(bool flag) {
             enabled = flag;

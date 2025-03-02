@@ -18,104 +18,189 @@
 
 namespace patch {
 
-	void __cdecl susie_load_t::LoadSpi(LPCSTR dir) {
-		auto loaded_spi_array = reinterpret_cast<ExEdit::structSPI*>(GLOBAL::exedit_base + OFS::ExEdit::loaded_spi_array);
+	struct structSPI_patched {
+		HMODULE hmodule;
+		char information[252];
+		int(PASCAL* IsSupported)(LPSTR filename, DWORD dw);
+		char extension[256];
+		ExEdit::SpiGetPicture GetPicture;
+	};
 
-		ZeroMemory(loaded_spi_array, sizeof(ExEdit::structSPI) * 32);
-		//MyFindFirstFile
+	void __cdecl susie_load_t::LoadSpi(LPCSTR dir) {
+
+		auto loaded_spi_array = reinterpret_cast<structSPI_patched*>(GLOBAL::exedit_base + OFS::ExEdit::loaded_spi_array);
+		ZeroMemory(loaded_spi_array, sizeof(structSPI_patched) * 32);
 		reinterpret_cast<BOOL(*)(LPCSTR)>(GLOBAL::exedit_base + OFS::ExEdit::MyFindFirstFile)(dir);
 
-		for (int i = 0; i < 32;) {
-			char path[260];
-			// MyFindNextFile
-			if (reinterpret_cast<BOOL(*)(LPSTR)>(GLOBAL::exedit_base + OFS::ExEdit::MyFindNextFile)(path) != TRUE)return;
+		auto path = *(char**)(GLOBAL::exedit_base + OFS::ExEdit::memory_ptr);
+		auto buf = path + _MAX_PATH + 16;
 
-			if (auto hMod = LoadLibraryA(path); hMod != NULL) {
-				auto spi_GetPluginInfo = reinterpret_cast<ExEdit::SpiGetPluginInfo>(GetProcAddress(hMod, "GetPluginInfo"));
-				if (!spi_GetPluginInfo) continue;
+		int i = 0;
+		while (i < 32 && reinterpret_cast<BOOL(__cdecl*)(LPSTR)>(GLOBAL::exedit_base + OFS::ExEdit::MyFindNextFile)(path)) {
+			auto hMod = LoadLibraryA(path);
+			if (hMod == nullptr) continue;
 
-				loaded_spi_array[i].GetPicture = reinterpret_cast<ExEdit::SpiGetPicture>(GetProcAddress(hMod, "GetPicture"));
-				loaded_spi_array[i].hmodule = hMod;
-
-				spi_GetPluginInfo(1, loaded_spi_array[i].information, 256);
-
-
-				int j = 2;
-				auto ext = loaded_spi_array[i].extension;
-				auto ext_pos = 0;
-				auto ext_size = std::size(loaded_spi_array[i].extension);
-
-				while (true) {
-					char buf[256];
-					auto ret = spi_GetPluginInfo(j, buf, sizeof(buf));
-					if (ret == 0)break;
-
-					const std::string_view view(buf);
-
-					size_t pos_a = 0;
-					size_t pos_b;
-					while ((pos_b = view.find_first_of(';', pos_a)) != std::string_view::npos) {
-						auto ext_pos_new = ext_pos + (pos_b - pos_a) + 1;
-						if (ext_pos_new >= ext_size) {
-							if (i == 31) goto BREAK_EXT;
-							ext[ext_pos - 1] = '\0';
-
-							LoadLibraryA(path);
-
-							i++;
-							ext = loaded_spi_array[i].extension;
-							ext_pos = 0;
-							ext_pos_new = (pos_b - pos_a) + 1;
-
-							loaded_spi_array[i].GetPicture = loaded_spi_array[i - 1].GetPicture;
-							loaded_spi_array[i].hmodule = hMod;
-
-							strcpy_s(loaded_spi_array[i].information, loaded_spi_array[i - 1].information);
-						}
-						strncpy_s(ext + ext_pos, ext_size - ext_pos, buf + pos_a, pos_b - pos_a);
-
-						ext_pos = ext_pos_new;
-						ext[ext_pos - 1] = ';';
-
-						pos_a = pos_b + 1;
-					}
-
-					if (ret - pos_a > 0) {
-						auto ext_pos_new = ext_pos + (ret - pos_a) + 1;
-						if (ext_pos_new >= ext_size) {
-							if (i == 31) goto BREAK_EXT;
-							ext[ext_pos - 1] = '\0';
-
-							LoadLibraryA(path);
-
-							i++;
-							ext = loaded_spi_array[i].extension;
-							ext_pos = 0;
-							ext_pos_new = (pos_b - pos_a) + 1;
-
-							loaded_spi_array[i].GetPicture = loaded_spi_array[i - 1].GetPicture;
-							loaded_spi_array[i].hmodule = hMod;
-
-							strcpy_s(loaded_spi_array[i].information, loaded_spi_array[i - 1].information);
-						}
-						strncpy_s(ext + ext_pos, ext_size - ext_pos, buf + pos_a, ret - pos_a);
-						ext_pos = ext_pos_new;
-						ext[ext_pos - 1] = ';';
-					}
-
-					if (j >= (std::numeric_limits<int>::max)() - 1)break;
-					j += 2;
-				}
-			BREAK_EXT:
-
-				if (ext_pos != 0) ext[ext_pos - 1] = '\0';
-
-				//spi_GetPluginInfo(2, loaded_spi_array[i].extension, 256);
-
-				i++;
+			auto spi_GetPluginInfo = reinterpret_cast<ExEdit::SpiGetPluginInfo>(GetProcAddress(hMod, "GetPluginInfo"));
+			if (spi_GetPluginInfo == nullptr) {
+				FreeLibrary(hMod);
+				continue;
 			}
+
+			spi_GetPluginInfo(0, (LPSTR)buf, 5);
+			if (*(int*)buf != 'NI00') {
+				FreeLibrary(hMod);
+				continue;
+			}
+
+			loaded_spi_array[i].IsSupported = reinterpret_cast<decltype(structSPI_patched::IsSupported)>(GetProcAddress(hMod, "IsSupported"));
+			if (loaded_spi_array[i].IsSupported == nullptr) {
+				FreeLibrary(hMod);
+				continue;
+			}
+
+			loaded_spi_array[i].GetPicture = reinterpret_cast<ExEdit::SpiGetPicture>(GetProcAddress(hMod, "GetPicture"));
+			if (loaded_spi_array[i].GetPicture == nullptr) {
+				FreeLibrary(hMod);
+				continue;
+			}
+			
+			spi_GetPluginInfo(1, loaded_spi_array[i].information, sizeof(loaded_spi_array->information) - 1);
+
+			loaded_spi_array[i].hmodule = hMod;
+
+			auto ptr = buf;
+			int j = 2;
+			while (spi_GetPluginInfo(j, ptr, 8192) != 0) {
+				int len = lstrlenA(ptr);
+				if (0 < len) {
+					ptr += len;
+					*ptr = ';';
+					ptr++;
+					*ptr = '\0';
+				}
+				j += 2;
+			}
+
+			int count = 0;
+			j = 0;
+			while (ptr = reinterpret_cast<char*(__cdecl*)(char*, int)>(GLOBAL::exedit_base + OFS::ExEdit::get_str_semicolon_index)(buf, j), ptr != nullptr) {
+				int len = lstrlenA(ptr);
+				if (2 < len && len < 255 && ptr[0] == '*' && ptr[1] == '.') {
+					if (255 <= count + len) {
+						spi_count = i + 1;
+						if (0 < count && loaded_spi_array[i].extension[count - 1] == ';') {
+							loaded_spi_array[i].extension[count - 1] = '\0';
+						}
+						if (31 <= i) return;
+						loaded_spi_array[i + 1].hmodule = loaded_spi_array[i].hmodule;
+						loaded_spi_array[i + 1].GetPicture = loaded_spi_array[i].GetPicture;
+						strcpy_s(loaded_spi_array[i + 1].information, sizeof(loaded_spi_array->information), loaded_spi_array[i].information);
+						i++;
+						count = 0;
+					}
+					for (int k = 0; k < len; k++) {
+						loaded_spi_array[i].extension[count] = std::tolower(ptr[k]);
+						count++;
+					}
+					loaded_spi_array[i].extension[count] = ';';
+					count++;
+				}
+				j++;
+			}
+			if (0 < count && loaded_spi_array[i].extension[count - 1] == ';') {
+				loaded_spi_array[i].extension[count - 1] = '\0';
+			}
+			i++;
+			spi_count = i;
 		}
 
 	}
+	void __cdecl susie_load_t::FreeSpi(){
+		auto loaded_spi_array = reinterpret_cast<structSPI_patched*>(GLOBAL::exedit_base + OFS::ExEdit::loaded_spi_array);
+		for (int i = 0; i < 32; i++) {
+			if (loaded_spi_array[i].hmodule != nullptr) {
+				FreeLibrary(loaded_spi_array[i].hmodule);
+				auto hmodule = loaded_spi_array[i].hmodule;
+				for (int j = i; j < 32; j++) {
+					if (hmodule == loaded_spi_array[j].hmodule) {
+						loaded_spi_array[j].hmodule = nullptr;
+					}
+				}
+			}
+		}
+	}
+
+	// ファイル選択ダイアログで表示する拡張子を重複しないようにする
+	void __cdecl susie_load_t::set_susie_extension(char* ptr) {
+		/* ptrバッファは1024byteだけど安全に使えるのは478byteまで
+			根拠：
+			"ImageFile (*.bmp;*.png;*.jpg;%s)\0*.bmp;*.png;*.jpg;%s\0AllFile (*.*)\0*.*"
+			が1024byte以内に収まる必要があり、2カ所ある%sにptr文字列が入る
+		*/
+		constexpr int maxlen = 478;
+		char* ptr_end = ptr + maxlen - 2;
+
+		char* list = ptr + 512;
+		const char def[] = "*.bmp\0*.png\0*.jpg";
+		memcpy(list, def, sizeof(def));
+		int count = 3;
+
+		auto loaded_spi_array = reinterpret_cast<structSPI_patched*>(GLOBAL::exedit_base + OFS::ExEdit::loaded_spi_array);
+		for (int i = 0; i < 32; i++) {
+			if (loaded_spi_array[i].hmodule != nullptr) {
+				int j = 0;
+				char* ext;
+				while (ext = reinterpret_cast<char*(__cdecl*)(char*, int)>(GLOBAL::exedit_base + OFS::ExEdit::get_str_semicolon_index)(loaded_spi_array[i].extension, j), ext != nullptr) {
+					char* listptr = list;
+					int k;
+					for (k = 0; k < count; k++) {
+						if (lstrcmpiA(listptr, ext) == 0) {
+							break;
+						}
+						listptr += lstrlenA(listptr) + 1;
+					}
+					if (k == count) {
+						int len = lstrlenA(ext);
+						if (ptr + len < ptr_end) {
+							lstrcpyA(ptr, ext);
+							lstrcpyA(listptr, ext);
+							ptr += len; *ptr = ';'; ptr++;
+							count++;
+						}
+					}
+					j++;
+				}
+			}
+		}
+		*ptr = '\0';
+	}
+
+	BOOL __cdecl susie_load_t::get_picture(ExEdit::SpiImageData* spidata, char* path) {
+		if (spi_count <= 0) return FALSE;
+
+		void* ptr = reinterpret_cast<void*>(GLOBAL::exedit_base + 0x14ea18); // exdataの整理のために使われる20,000byteのバッファ。一時領域に使える
+		int readsize = reinterpret_cast<DWORD(__cdecl*)(LPCSTR, LPVOID, DWORD)>(GLOBAL::exedit_base + OFS::ExEdit::LoadFile)(path, ptr, 2048);
+		if (readsize == 0) return FALSE;
+		if (readsize < 2048) { // 2048byteに足りない分は0埋めが推奨されている
+			memset((byte*)ptr + readsize, 0, 2048 - readsize);
+		}
+
+		auto loaded_spi_array = reinterpret_cast<structSPI_patched*>(GLOBAL::exedit_base + OFS::ExEdit::loaded_spi_array);
+		HMODULE prehmod = nullptr;
+		for (int i = 0; i < spi_count; i++) {
+			if (prehmod != loaded_spi_array[i].hmodule && loaded_spi_array[i].hmodule != nullptr) {
+				prehmod = loaded_spi_array[i].hmodule;
+				if (loaded_spi_array[i].IsSupported(path, (DWORD)ptr)) {
+					if (loaded_spi_array[i].GetPicture(path, 0, 0, &spidata->l_info, &spidata->l_image, 0, 0) == 0) {
+						spidata->p_info = (BITMAPINFO*)LocalLock(spidata->l_info);
+						spidata->p_image = LocalLock(spidata->l_image);
+						return TRUE;
+					}
+				}
+			}
+		}
+		return FALSE;
+	}
+
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_SUSIE_LOAD

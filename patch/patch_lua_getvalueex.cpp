@@ -25,7 +25,7 @@ namespace patch {
 		int target_i = 0;
 
 		auto efpip = load_i32<ExEdit::FilterProcInfo*>(GLOBAL::exedit_base + OFS::ExEdit::script_efpip);
-		auto ScriptProcessingFilter = load_i32<ExEdit::Filter*>(GLOBAL::exedit_base + OFS::ExEdit::ScriptProcessingFilter);
+		auto efp = load_i32<ExEdit::Filter*>(GLOBAL::exedit_base + OFS::ExEdit::script_efp);
 
 		int n = lua_gettop(L);
 		int frame;
@@ -40,16 +40,16 @@ namespace patch {
 			frame = static_cast<int>(floor(frame_before_round));
 			subframe = static_cast<int>(floor((frame_before_round - frame) * 100.0));
 			if (n < 3) {
-				frame += ScriptProcessingFilter->frame_start_chain;
+				frame += efp->frame_start_chain;
 			}
 			else {
 				int section = luaL_checkinteger(L, 3);
 				if (section < 0) {
-					frame += ScriptProcessingFilter->frame_end_chain;
+					frame += efp->frame_end_chain;
 				}
 				else {
 					//exfunc_10;
-					auto ps = reinterpret_cast<ExEdit::ObjectFilterIndex(__cdecl*)(ExEdit::ObjectFilterIndex)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_10)(ScriptProcessingFilter->processing);
+					auto ps = reinterpret_cast<ExEdit::ObjectFilterIndex(__cdecl*)(ExEdit::ObjectFilterIndex)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_10)(efp->processing);
 					while (section) {
 						//exfunc_08
 						ps = reinterpret_cast<ExEdit::ObjectFilterIndex(__cdecl*)(ExEdit::ObjectFilterIndex)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_08)(ps);
@@ -60,7 +60,7 @@ namespace patch {
 						frame += reinterpret_cast<ExEdit::Object*(__cdecl*)(ExEdit::ObjectFilterIndex, int)>(GLOBAL::exedit_base + OFS::ExEdit::func_0x047ad0)(ps, 0)->frame_begin;
 					}
 					else {
-						frame += ScriptProcessingFilter->frame_end_chain;
+						frame += efp->frame_end_chain;
 					}
 				}
 			}
@@ -70,8 +70,8 @@ namespace patch {
 		if (lua_isnumber(L, 1)) {
 			int target = luaL_checkinteger(L, 1);
 			if (target < 0)return 0;
-			if (ScriptProcessingFilter->track_n <= target)return 0;
-			reinterpret_cast<BOOL(__cdecl*)(ExEdit::ObjectFilterIndex, int, int, int*, int)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_64)(ScriptProcessingFilter->processing, frame, subframe, &result_nu, target + 1);
+			if (efp->track_n <= target)return 0;
+			reinterpret_cast<BOOL(__cdecl*)(ExEdit::ObjectFilterIndex, int, int, int*, int)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_64)(efp->processing, frame, subframe, &result_nu, target + 1);
 			result_de = 100;
 		}
 		else {
@@ -96,7 +96,7 @@ namespace patch {
 				if (layer_idx < 1 && 100 < layer_idx) return 0;
 				target++;
 				// ef0x1c
-				ps = reinterpret_cast<ExEdit::ObjectFilterIndex(__cdecl*)(int, int, int, int, unsigned int)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_1c)(frame, layer_idx - 1, ScriptProcessingFilter->scene_set, 0, 0x10);
+				ps = reinterpret_cast<ExEdit::ObjectFilterIndex(__cdecl*)(int, int, int, int, unsigned int)>(GLOBAL::exedit_base + OFS::ExEdit::exfunc_1c)(frame, layer_idx - 1, efp->scene_set, 0, 0x10);
 			}
 			else {
 				// GetCurrentProcessing

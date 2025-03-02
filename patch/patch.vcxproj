@@ -41,6 +41,7 @@
     <ClInclude Include="patch_any_obj.hpp" />
     <ClInclude Include="patch_audio_ee_main.hpp" />
     <ClInclude Include="patch_audio_efpi_init.hpp" />
+    <ClInclude Include="patch_audio_filtered_cache.hpp" />
     <ClInclude Include="patch_audio_layer_end.hpp" />
     <ClInclude Include="patch_audio_preprocess.hpp" />
     <ClInclude Include="patch_aup_layer_setting.hpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="patch_init_window_pos.hpp" />
     <ClInclude Include="patch_keyconfig.hpp" />
     <ClInclude Include="patch_load_exedit_backup.hpp" />
+    <ClInclude Include="patch_lua_effect.hpp" />
     <ClInclude Include="patch_lua_load.hpp" />
     <ClInclude Include="patch_lua_setanchor.hpp" />
     <ClInclude Include="patch_midpt_delete.hpp" />
@@ -125,9 +127,11 @@
     <ClInclude Include="patch_obj_text.hpp" />
     <ClInclude Include="patch_obj_volumefade.hpp" />
     <ClInclude Include="patch_obj_waveform.hpp" />
+    <ClInclude Include="patch_page_size_alloc.hpp" />
     <ClInclude Include="patch_paste_pos.hpp" />
     <ClInclude Include="patch_playback_pos.hpp" />
     <ClInclude Include="patch_read_audio.hpp" />
+    <ClInclude Include="patch_relative_path.hpp" />
     <ClInclude Include="patch_rendering.hpp" />
     <ClInclude Include="patch_right_trackbar.hpp" />
     <ClInclude Include="patch_sat_rgb_space.hpp" />
@@ -237,6 +241,7 @@
     <ClCompile Include="patch_adjust_vmem.cpp" />
     <ClCompile Include="patch_any_obj.cpp" />
     <ClCompile Include="patch_audio_ee_main.cpp" />
+    <ClCompile Include="patch_audio_filtered_cache.cpp" />
     <ClCompile Include="patch_aup_load.cpp" />
     <ClCompile Include="patch_aviutl_wndproc_override.cpp" />
     <ClCompile Include="patch_avi_file_handle_close.cpp" />

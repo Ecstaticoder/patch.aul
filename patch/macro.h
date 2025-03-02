@@ -94,7 +94,7 @@
 #endif //define PATCH_SWITCH_FAST
 
 #else // ifdef PATCH_INTERNAL
-#define PATCH_VERSION_STR "r43_ss_69"
+#define PATCH_VERSION_STR "r43_ss_70"
 
 #define PATCH_SWITCH_EXCEPTION_LOG
 #define PATCH_SWITCH_SYSINFO_MODIFY
@@ -107,6 +107,7 @@
 #define PATCH_SWITCH_TRACKBAR trackbar
 #define PATCH_SWITCH_FILEINFO file_info
 #define PATCH_SWITCH_SET_FRAME set_frame
+#define PATCH_SWITCH_AUDIO_FILTERED_CACHE audio_filtered_cache
 #define PATCH_SWITCH_READ_AUDIO read_audio
 #define PATCH_SWITCH_WAVE_FILE_READER wave_file_reader
 // #define PATCH_SWITCH_ADJUST_VMEM adjust_vmem
@@ -150,6 +151,7 @@
 #define PATCH_SWITCH_FAILED_SJIS_MSGBOX failed_sjis
 #define PATCH_SWITCH_FAILED_LONGER_PATH failed_longpath
 #define PATCH_SWITCH_FAILED_FILE_DROP failed_filedrop
+#define PATCH_SWITCH_SUSIE_LOAD susie_load
 #define PATCH_SWITCH_SMALL_FILTER small_filter
 #define PATCH_SWITCH_OBJ_TEXT obj_text
 #define PATCH_SWITCH_OBJ_CREATE_FIGURE obj_create_figure
@@ -183,10 +185,10 @@
 #define PATCH_SWITCH_BLEND blend
 #define PATCH_SWITCH_ADD_EXTENSION add_extension
 #define PATCH_SWITCH_DIALOG_NEW_FILE dlg_newfile
-#define PATCH_SWITCH_IMAGE_DATA_CACHE image_data_cache
+#define PATCH_SWITCH_PAGE_SIZE_ALLOC page_size_alloc
 #define PATCH_SWITCH_SCENE_CACHE scenecache
 #define PATCH_SWITCH_SCENE_VRAM scenevram
-#define PATCH_SWITCH_AUDIO_EE_MAIN audio_ee_main
+// #define PATCH_SWITCH_AUDIO_EE_MAIN audio_ee_main // audio_filtered_cacheに移行
 #define PATCH_SWITCH_AUDIO_EFPI_INIT audio_efpi_init
 #define PATCH_SWITCH_AUDIO_LAYER_END audio_layer_end
 // #define PATCH_SWITCH_AUDIO_PREPROCESS audio_preprocess
@@ -212,6 +214,7 @@
 #define PATCH_SWITCH_SAT_RGB_SPACE sat_rgb
 #define PATCH_SWITCH_UPDATE_COUNT update_count
 #define PATCH_SWITCH_SCRIPT_SORT_PATCH script_sort_patch
+#define PATCH_SWITCH_RELATIVE_PATH_PATCH relative_path_patch
 
 
 #define PATCH_SWITCH_UNDO undo
@@ -230,10 +233,11 @@
 #define PATCH_SWITCH_LUA lua
 #ifdef PATCH_SWITCH_LUA
 	#define PATCH_SWITCH_LUA_ENV lua_env
+	#define PATCH_SWITCH_LUA_EFFECT lua_effect
 	#define PATCH_SWITCH_LUA_LOAD lua_load
-	#define PATCH_SWITCH_LUA_GETVALUE lua_getvalue
 	#define PATCH_SWITCH_LUA_RAND lua_rand
 	#define PATCH_SWITCH_LUA_RANDEX lua_randex
+	#define PATCH_SWITCH_LUA_GETVALUE lua_getvalue
 	#define PATCH_SWITCH_LUA_SETANCHOR lua_setanchor
 	#define PATCH_SWITCH_LUA_PATH lua_path
 #endif // ifdef PATCH_SWITCH_LUA

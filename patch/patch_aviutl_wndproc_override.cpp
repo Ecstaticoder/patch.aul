@@ -56,6 +56,10 @@ namespace patch {
                         MessageBoxA(hwnd, exfilter::Plugins.get_info(), "eef info", MB_OK | MB_ICONASTERISK);
                         return 0;
                     }
+                    case PATCH_MENU_SUSIE_INFO: {
+                        MessageBoxA(hwnd, susie_load.get_info(), "susie info", MB_OK | MB_ICONASTERISK);
+                        return 0;
+                    }
                 }
             }
             break;

@@ -81,6 +81,9 @@ public:
             #ifdef PATCH_SWITCH_SET_FRAME
                 patch::set_frame.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_AUDIO_FILTERED_CACHE
+                patch::audio_filtered_cache.switch_load(cr);
+            #endif
             #ifdef PATCH_SWITCH_READ_AUDIO
                 patch::read_audio.switch_load(cr);
             #endif
@@ -309,8 +312,8 @@ public:
             #ifdef PATCH_SWITCH_DIALOG_NEW_FILE
                 patch::dialog_new_file.switch_load(cr);
             #endif
-            #ifdef PATCH_SWITCH_IMAGE_DATA_CACHE
-                patch::image_data_cache.switch_load(cr);
+            #ifdef PATCH_SWITCH_PAGE_SIZE_ALLOC
+                patch::page_size_alloc.switch_load(cr);
             #endif
             #ifdef PATCH_SWITCH_SECOND_CACHE
                 patch::second_cache.switch_load(cr);
@@ -408,6 +411,9 @@ public:
             #ifdef PATCH_SWITCH_SCRIPT_SORT_PATCH
                 patch::patch_script_sort.switch_load(cr);
             #endif
+            #ifdef PATCH_SWITCH_RELATIVE_PATH_PATCH
+                patch::patch_relative_path.switch_load(cr);
+            #endif
         
             #ifdef PATCH_SWITCH_UNDO
                 patch::undo.switch_load(cr);
@@ -422,13 +428,13 @@ public:
                 
             #ifdef PATCH_SWITCH_LUA
                 patch::lua.switch_load(cr);
+                
+                #ifdef PATCH_SWITCH_LUA_EFFECT
+                    patch::lua_effect.switch_load(cr);
+                #endif
 
                 #ifdef PATCH_SWITCH_LUA_LOAD
                     patch::lua_load.switch_load(cr);
-                #endif
-
-                #ifdef PATCH_SWITCH_LUA_GETVALUE
-                    patch::lua_getvalueex.switch_load(cr);
                 #endif
 
                 #ifdef PATCH_SWITCH_LUA_RAND
@@ -437,6 +443,10 @@ public:
 
                 #ifdef PATCH_SWITCH_LUA_RANDEX
                     patch::lua_randex.switch_load(cr);
+                #endif
+
+                #ifdef PATCH_SWITCH_LUA_GETVALUE
+                    patch::lua_getvalueex.switch_load(cr);
                 #endif
 
                 #ifdef PATCH_SWITCH_LUA_SETANCHOR
@@ -814,6 +824,9 @@ public:
             #ifdef PATCH_SWITCH_SET_FRAME
                 patch::set_frame.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_AUDIO_FILTERED_CACHE
+                patch::audio_filtered_cache.switch_store(switch_);
+            #endif
             #ifdef PATCH_SWITCH_READ_AUDIO
                 patch::read_audio.switch_store(switch_);
             #endif
@@ -1042,8 +1055,8 @@ public:
             #ifdef PATCH_SWITCH_DIALOG_NEW_FILE
                 patch::dialog_new_file.switch_store(switch_);
             #endif
-            #ifdef PATCH_SWITCH_IMAGE_DATA_CACHE
-                patch::image_data_cache.switch_store(switch_);
+            #ifdef PATCH_SWITCH_PAGE_SIZE_ALLOC
+                patch::page_size_alloc.switch_store(switch_);
             #endif
             #ifdef PATCH_SWITCH_SECOND_CACHE
                 patch::second_cache.switch_store(switch_);
@@ -1141,6 +1154,9 @@ public:
             #ifdef PATCH_SWITCH_SCRIPT_SORT_PATCH
                 patch::patch_script_sort.switch_store(switch_);
             #endif
+            #ifdef PATCH_SWITCH_RELATIVE_PATH_PATCH
+                patch::patch_relative_path.switch_store(switch_);
+            #endif
 
             #ifdef PATCH_SWITCH_UNDO
                 patch::undo.switch_store(switch_);
@@ -1155,12 +1171,13 @@ public:
                 
             #ifdef PATCH_SWITCH_LUA
                 patch::lua.switch_store(switch_);
-                #ifdef PATCH_SWITCH_LUA_LOAD
-                    patch::lua_load.switch_store(switch_);
+                
+                #ifdef PATCH_SWITCH_LUA_EFFECT
+                    patch::lua_effect.switch_store(switch_);
                 #endif
 
-                #ifdef PATCH_SWITCH_LUA_GETVALUE
-                    patch::lua_getvalueex.switch_store(switch_);
+                #ifdef PATCH_SWITCH_LUA_LOAD
+                    patch::lua_load.switch_store(switch_);
                 #endif
 
                 #ifdef PATCH_SWITCH_LUA_RAND
@@ -1169,6 +1186,10 @@ public:
 
                 #ifdef PATCH_SWITCH_LUA_RANDEX
                     patch::lua_randex.switch_store(switch_);
+                #endif
+
+                #ifdef PATCH_SWITCH_LUA_GETVALUE
+                    patch::lua_getvalueex.switch_store(switch_);
                 #endif
 
                 #ifdef PATCH_SWITCH_LUA_SETANCHOR

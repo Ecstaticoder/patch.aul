@@ -31,12 +31,16 @@ namespace OFS {
 		constexpr i32 exfunc = 0x0a8c78;
 		constexpr i32 main_hwnd = 0x092874;
 
+		constexpr i32 undo_frame_len = 0x2dae2c;
+		constexpr i32 undo_frame_n = 0x2dae34;
+
 		constexpr i32 ini_shiftselect = 0x086398;
 
 		constexpr i32 vram_yc_size = 0x08562c;
 
 		constexpr i32 get_exe_dir = 0x02c8c0;
 
+		constexpr i32 SortedFilterTable = 0x25a9b8;
 		constexpr i32 filter_change_size_ptr = 0x0814e8;
 		constexpr i32 filter_change_framerate_ptr = 0x080b28;
 		constexpr i32 filter_clipping_and_resize_ptr = 0x07ad58;
@@ -50,6 +54,8 @@ namespace OFS {
 		constexpr i32 trackbar_WndProc = 0x2daaf4;
 
 		constexpr i32 get_filename_cursor = 0x02c3d0;
+
+		constexpr i32 audio_auf_func_proc = 0x030940;
 
 		constexpr i32 tick_start_playing = 0x2c4d8c;
 		constexpr i32 tick_start_output = 0x2da1b8;
@@ -121,7 +127,6 @@ namespace OFS {
 
 		constexpr i32 exo_trackparam_overwrite = 0x0299d1;
 
-		constexpr i32 script_efpip = 0x1b2b20;
 
 		constexpr i32 getpixeldata = 0x09a65c;
 		constexpr i32 rgb2yc = 0x06fed0;
@@ -276,13 +281,18 @@ namespace OFS {
 		constexpr i32 PixelYCA_sss2fbb = 0x070550;
 		constexpr i32 PixelYCA_fbb2sss = 0x070700;
 
-		constexpr i32 ScriptProcessingFilter = 0x1b2b10;
+		constexpr i32 script_efp = 0x1b2b10;
+		constexpr i32 script_efpip = 0x1b2b20;
 
 		constexpr i32 double_1000 = 0x09a3d0;
 		constexpr i32 double_1div65536 = 0x09a3f0;
-
+		
+		constexpr i32 get_str_semicolon_index = 0x08a1c0;
 		constexpr i32 extract_extension = 0x04e1d0;
 		constexpr i32 ini_extension_buf = 0x14cb58;
+		constexpr i32 image_extension_inited = 0x1a538c;
+		constexpr i32 image_extension_str = 0x1539e0;
+
 		constexpr i32 str_DOUGAFILE= 0x09df6c; // "動画ファイル"
 		constexpr i32 str_ONSEIFILE = 0x0ba698; // "音声ファイル"
 		constexpr i32 str_dot_exedit_backup = 0x0a5308;
@@ -427,9 +437,9 @@ namespace OFS {
 		constexpr i32 ExtendedFilter_wndcls = 0x02e872;
 
 		constexpr i32 loaded_spi_array = 0x2321f0;
-
 		constexpr i32 MyFindFirstFile = 0x04e220;
 		constexpr i32 MyFindNextFile = 0x04e270;
+		constexpr i32 LoadFile = 0x04e110;
 		constexpr i32 LoadSpi = 0x08a210;
 
 		constexpr i32 text_op_logfont_size = 0x050716;

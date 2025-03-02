@@ -27,6 +27,7 @@ namespace patch {
 
 	// init at exedit load
 	// 画像データのキャッシュ数関係のサイズをページ単位（4096の倍数）になるように広げる
+	// patch_page_size_allocに移動
 
 	inline class image_data_cache_t {
 

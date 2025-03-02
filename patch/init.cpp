@@ -56,7 +56,6 @@ void init_t::InitAtPatchLoaded() {
 
 	ModulesData::update();
 
-	init_util_magic();
 	{
 		DWORD oldProtect;
 		VirtualProtect(GLOBAL::executable_memory, sizeof(GLOBAL::executable_memory), PAGE_EXECUTE_READWRITE, &oldProtect);
@@ -122,6 +121,10 @@ void init_t::InitAtPatchLoaded() {
 	patch::set_frame.init();
 #endif
 
+#ifdef PATCH_SWITCH_AUDIO_FILTERED_CACHE
+	patch::audio_filtered_cache.init();
+#endif
+
 #ifdef PATCH_SWITCH_READ_AUDIO
 	patch::read_audio.init();
 #endif
@@ -133,13 +136,17 @@ void init_t::InitAtPatchLoaded() {
 #ifdef PATCH_SWITCH_ADJUST_VMEM
 	patch::adjust_vmem.init();
 #endif
+
+#ifdef PATCH_SWITCH_UPDATE_COUNT
+	patch::update_count.init_au();
+#endif
 }
 
 void init_t::InitAtExeditLoad() {
 	mywindow.init();
 
 #ifdef PATCH_SWITCH_UPDATE_COUNT
-	patch::update_count.init();
+	patch::update_count.init_ee();
 #endif
 
 #ifdef PATCH_SWITCH_THEME_CC
@@ -371,8 +378,8 @@ void init_t::InitAtExeditLoad() {
 #ifdef PATCH_SWITCH_ADD_EXTENSION
 	patch::add_extension.init();
 #endif
-#ifdef PATCH_SWITCH_IMAGE_DATA_CACHE
-	patch::image_data_cache.init();
+#ifdef PATCH_SWITCH_PAGE_SIZE_ALLOC
+	patch::page_size_alloc.init();
 #endif
 #ifdef PATCH_SWITCH_SECOND_CACHE
 	patch::second_cache.init();
@@ -716,6 +723,15 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 		patch::patch_script_sort.init(ret);
 	}
 #endif
+#ifdef PATCH_SWITCH_RELATIVE_PATH_PATCH
+	else if (lstrcmpiA(filename, "relative_path.auf") == 0) {
+		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
+		auto filter = reinterpret_cast<AviUtl::GetFilterTable_t>(GetProcAddress(ret, reinterpret_cast<LPCSTR>(GLOBAL::aviutl_base + OFS::AviUtl::str_GetFilterTable)))();
+		if (strcmp(filter->information, "相対パスv0.9b by rikky") == 0) {
+			patch::patch_relative_path.init(ret);
+		}
+	}
+#endif
 #ifdef PATCH_SWITCH_SETTINGDIALOG_CHROMAKEY
 	else if (lstrcmpiA(filename, "WideDialog.auf") == 0) {
 		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
@@ -842,19 +858,24 @@ BOOL __cdecl init_t::func_initWrap(AviUtl::FilterPlugin* fp) {
 #ifdef PATCH_SWITCH_LUA
 	patch::lua.init();
 	
+	#ifdef PATCH_SWITCH_LUA_EFFECT
+		patch::lua_effect.init();
+	#endif
+
 	#ifdef PATCH_SWITCH_LUA_LOAD
 		patch::lua_load.init();
 	#endif
+
+	#ifdef PATCH_SWITCH_LUA_GETVALUE
+		patch::lua_getvalueex.init();
+	#endif
+
 	#ifdef PATCH_SWITCH_LUA_RAND
 		patch::lua_rand.init();
 	#endif
 
 	#ifdef PATCH_SWITCH_LUA_RANDEX
 		patch::lua_randex.init();
-	#endif
-
-	#ifdef PATCH_SWITCH_LUA_GETVALUE
-		patch::lua_getvalueex.init();
 	#endif
 
 	#ifdef PATCH_SWITCH_LUA_SETANCHOR

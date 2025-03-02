@@ -29,6 +29,7 @@
 
 #include "patch_console.hpp"
 #include "patch_exfilter_plugins.hpp"
+#include "patch_susie_load.hpp"
 
 namespace patch {
 	// init before filter plugin load
