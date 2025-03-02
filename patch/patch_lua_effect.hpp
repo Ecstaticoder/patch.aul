@@ -26,7 +26,7 @@
 namespace patch {
 
     // init at exedit load
-    // obj.effect("filter_name")にてefp->proccesingが変わらないのを修正
+    // obj.effect("filter_name")にてefp->processingが変わらないのを修正
 
     inline class lua_effect_t {
         bool enabled = true;
