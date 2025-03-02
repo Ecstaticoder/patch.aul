@@ -2,7 +2,7 @@ patch.aul r43beta1
 © 2021-2023 ePi
 https://scrapbox.io/ePi5131/patch.aul
 
-patch.aul r43_ss_69
+patch.aul r43_ss_70
 https://scrapbox.io/nazosauna/patch.aul
 
 概要
@@ -48,6 +48,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・シーン画像生成に時間がかかった時にキャッシュを作成する
     ・Luaの環境が分かれてしまうことがある
     ・package.path,package.cpathはどんなときでもscriptフォルダを含めるように
+    ・obj.effectでefp->proccesingが変わらないのを修正
     ・obj.randでs=-2^31,e=2^31-1とすると例外になる
     ・obj.getvalueで中心座標(cx,cy,cz)、フレーム番号(frame)、総フレーム数(totalframe)、総時間(totaltime)を取得できるように
     ・obj.getvalue("layerX.time")が正しい値を取得できるように
@@ -196,7 +197,7 @@ https://scrapbox.io/nazosauna/patch.aul
     ・同じ動画に対して動画ファイルのハンドルを共有させるように変更(Altを押しながら読み込ませるときは無効)
     ・動画ファイル・音声ファイル・音声波形表示オブジェクトの初期値設定ファイル(.exc)に存在しないファイルが登録されている場合は読み込みを行わないように変更
     ・グリッドの設定にて基準フレーム番号に負の値を入力できるように変更
-    ・画像データのキャッシュのサイズをページ単位になるように広げる
+    ・画像データのキャッシュなどのサイズをページ単位になるように広げる
     ・モーションブラーにて間隔が0未満の時にエラーが出るのを修正
     ・32bitRGBAの画像に透明度が必要無い場合、24bitRGBに変換して使用キャッシュを25%削減する
     ・拡張編集の音声処理のメイン関数0x49ca0にて最終レイヤー指定が機能していなかったのを修正
@@ -220,6 +221,8 @@ https://scrapbox.io/nazosauna/patch.aul
     ・音量フェードでの合計秒数がオブジェクトの長さ以上の場合に正しく計算されるように変更
     ・中間点を削除した時に設定ダイアログが正常に更新されないことがあるのを修正
     ・スクリプトからのYCA_RGBA変換の際に横幅が奇数サイズのバッファでエラーとなることがあるのを修正
+    ・Susieのプラグインが正常に動作しないの問題を修正
+    ・相対パス保存プラグインのバグを修正（v0.9bのみ）
 
     追加
     ・コンソールの表示
@@ -274,6 +277,10 @@ https://scrapbox.io/nazosauna/patch.aul
         ・拡張子 .eef
         ・対象フォルダ \plugins
         ・エントリ名 GetFilterTableList
+
+    ・Susieプラグイン情報
+        「その他」メニューに追加されます
+
 
 設定
     patch.aulと同じパスにpatch.aul.jsonが生成されて、これが設定ファイルになります。
@@ -507,7 +514,7 @@ https://scrapbox.io/nazosauna/patch.aul
 Lua追加要素詳細
     _PATCH
         patch.aulのバージョン情報
-        例として "patch.aul r43_ss_69" のような文字列が格納されている
+        例として "patch.aul r43_ss_70" のような文字列が格納されている
 
     obj.randex(seed,frame)
         seed : integer
@@ -519,7 +526,7 @@ Lua追加要素詳細
             userdata(start,end)の形式で呼び出せて、呼び出しの毎に返されるintegerは変わる
 
 ライセンス
-    LGPLv3 詳細はLICENSEファイルを見よ
+    LGPLv3 詳細はLICENSEファイルを参照
 
 その他の注意
     デバッグ情報ファイルには、個人情報が含まれる可能性があります。例えば個人情報を扱っているところで例外が発生した場合、レジスタやスタックにその情報が載っているかもしれません。
