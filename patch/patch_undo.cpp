@@ -23,12 +23,77 @@
 namespace patch {
 #ifdef PATCH_SWITCH_UNDO
 
+
+    int __stdcall undo_t::change_any_exdata_set_undo(unsigned int select_id, void* dst, void* src, int size) {
+        if (memcmp(dst, src, size)) {
+            set_undo(reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SelectingObjectIdxArray)[select_id], 0);
+            return size;
+        }
+        return 0;
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_change_any_exdata_set_undo() {
+        __asm {
+            add     edi, eax
+            push    edx
+            push    ecx
+            push    esi
+            push    edi
+            push    dword ptr [esp + 0x24]
+            call    change_any_exdata_set_undo
+            pop     edx
+            mov     ecx, eax
+            shr     ecx, 0x02
+            ret
+        }
+    }
+
     void __stdcall undo_t::set_undo_pp(ExEdit::Filter* efp, int new_value, int* current_value_ptr) {
         if (*current_value_ptr != new_value) {
             set_undo(LOWORD(efp->processing) - 1, 1);
             *current_value_ptr = new_value;
         }
     }
+    __declspec(naked) void __cdecl undo_t::asm_func_set_undo_pp_movie_scene() {
+        __asm {
+            push    ecx
+            push    eax
+            push    esi
+            call    set_undo_pp
+            mov     ecx, dword ptr[esi + 0x000000E4]
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_set_undo_pp_audio() {
+        __asm {
+            push    edx
+            push    eax
+            push    esi
+            call    set_undo_pp
+            mov     edx, dword ptr[esi + 0x000000E4]
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_set_undo_pp_waveform() {
+        __asm {
+            push    edx
+            push    eax
+            push    esi
+            call    set_undo_pp
+            mov     ecx, dword ptr[esi + 0x000000E4]
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_set_undo_pp_sceneaudio() {
+        __asm {
+            push    ecx
+            push    eax
+            push    esi
+            call    set_undo_pp
+            mov     eax, dword ptr[esi + 0x000000E4]
+            ret
+        }
+    }
+
     int __stdcall undo_t::f8d508(int object_idx) {
         int dialog_idx = *ObjDlg_ObjectIndex_ptr;
         if (dialog_idx < 0) {
@@ -54,6 +119,29 @@ namespace patch {
         }
     }
 
+    __declspec(naked) void __cdecl undo_t::asm_func_split_group_set_undo() {
+        __asm {
+            push    ecx
+            push    edx
+            call    dword ptr[object2idx]
+            push    ebx
+            push    eax
+            call    dword ptr[set_undo]
+            add     esp, 0x08
+            pop     edx
+            pop     ecx
+            mov     dword ptr[edx + 0x000004BC], ecx
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_set_undo_layer_set() {
+        __asm {
+            lea     eax, dword ptr[ecx + eax * 8]
+            mov     edx, dword ptr[eax + 0x000005C0]
+            ret
+        }
+    }
+
     void __stdcall undo_t::run_undo_flag8_layer_disp(int object_ofs, ExEdit::UndoData* ud) {
         ExEdit::Object* obj = reinterpret_cast<ExEdit::Object*>((int)*ObjectArrayPointer_ptr + object_ofs);
         if (obj->scene_set == *reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SceneDisplaying)) {
@@ -71,6 +159,28 @@ namespace patch {
             dst->layer_disp = -1;
         }
         return eax;
+    }
+    __declspec(naked) void __cdecl undo_t::asm_func_run_undo_flag0() {
+        __asm {
+            push    eax
+            push    esi
+            push    edi
+            call    run_undo_flag0
+            ret
+        }
+    }
+
+    __declspec(naked) void __cdecl undo_t::asm_func_cb_moviesynthesis() {
+        __asm {
+            mov     edx, dword ptr [esi + 0x64]
+            push    0x00
+            push    dword ptr [esi + 0x000000E4]
+            mov     esi, eax
+            call    dword ptr [edx + 0x00000080]
+            add     esp, 0x08
+            mov     dword ptr [edi + 0x00000118], esi
+            ret
+        }
     }
 
     int __cdecl undo_t::efDraw_func_WndProc_wrap_06e2b4(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam, AviUtl::EditHandle* editp, ExEdit::Filter* efp) {
@@ -229,10 +339,18 @@ namespace patch {
         undo_layer->layersetting.name = ls->name = reinterpret_cast<char* (__cdecl*)(char*, void*)>(GLOBAL::exedit_base + OFS::ExEdit::scene_layer_name_put_buffer)(undo_layer->name_buf, *(void**)(GLOBAL::exedit_base + OFS::ExEdit::memory_ptr));
     }
 
-    ExEdit::Object* __stdcall undo_t::f42617() {
+    ExEdit::Object* __stdcall undo_t::set_undo_layer_switch_sc() {
         AddUndoCount();
         set_undo((*ObjectArrayPointer_ptr)[*ObjDlg_ObjectIndex_ptr].layer_disp, 0x10);
         return *ObjectArrayPointer_ptr;
+    }
+    __declspec(naked) ExEdit::Object* __cdecl undo_t::asm_func_set_undo_layer_switch_sc() {
+        __asm {
+            push    edx
+            call    set_undo_layer_switch_sc
+            pop     edx
+            ret
+        }
     }
 
     void __stdcall undo_t::f4355c(ExEdit::Object* obj) {

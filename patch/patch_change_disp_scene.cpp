@@ -48,5 +48,18 @@ namespace patch {
 
 		return ret;
 	}
+
+	__declspec(naked) void __cdecl change_disp_scene_t::asm_func_disp_idx() {
+		__asm {
+			add     edx, dword ptr [ee.x177a70]
+			mov     eax, dword ptr [edx]
+			mov     edx, dword ptr [ee.x1e0fa0]
+			cmp     eax, dword ptr [edx]
+			jl      SKIP
+				or      eax, 0xFFFFFFFF
+			SKIP:
+			ret
+		}
+	}
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_CHANGE_DISP_SCENE

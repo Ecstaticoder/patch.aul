@@ -35,5 +35,15 @@ namespace patch {
         return audio_n;
     }
 
+    __declspec(naked) void __cdecl obj_Waveform_t::asm_func() {
+        __asm {
+            cmp eax, -0x80
+            jnl skip
+                mov eax, 0xffffff80
+            skip:
+            ret
+        }
+    }
+
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_OBJ_WAVEFORM

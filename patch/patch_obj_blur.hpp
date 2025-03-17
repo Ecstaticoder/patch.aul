@@ -24,6 +24,7 @@
 
 #include "config_rw.hpp"
 #include "patch_small_filter.hpp"
+#include "patch_obj_create_figure.hpp"
 
 namespace patch {
 
@@ -44,6 +45,7 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "obj_blur";
+
     public:
 
         void init() {
@@ -73,25 +75,14 @@ namespace patch {
                     10000000 b8d34d6210         mov     eax,10624dd3
                     10000000 c3                 ret
                 */
-                auto& cursor = GLOBAL::executable_memory_cursor;
-
-                static const char code_put[] = {
-                    "\x85\xc9"                 // test    ecx,ecx
-                    "\x7d\x02"                 // jnl     skip,02
-                    "\x33\xc9"                 // xor     ecx,ecx
-                    "\xb8\xd3\x4d\x62\x10"     // mov     eax,10624dd3
-                    "\xc3"                     // ret
-                };
 
                 constexpr int vp_begin = 0x0e31f;
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x0e344 - vp_begin);
                 h.store_i8(0x0e31f - vp_begin, '\xe8');
-                h.replaceNearJmp(0x0e320 - vp_begin, cursor);
+                h.replaceNearJmp(0x0e320 - vp_begin, &obj_CreateFigure_t::asm_aspect_func);
                 h.store_i8(0x0e33f - vp_begin, '\xe8');
-                h.replaceNearJmp(0x0e340 - vp_begin, cursor);
+                h.replaceNearJmp(0x0e340 - vp_begin, &obj_CreateFigure_t::asm_aspect_func);
 
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                cursor += sizeof(code_put) - 1;
             }
 
             /*

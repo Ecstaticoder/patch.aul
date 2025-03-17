@@ -41,12 +41,13 @@ namespace patch {
 		std::optional<restorable_patch> rp2;
 		std::optional<restorable_patch> rp3;
 
+		static int __cdecl asm_func();
+
 	public:
 		void init() {
 			
 			if (!enabled)return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
 
 			OverWriteOnProtectHelper h(GLOBAL::exedit_base + OFS::ExEdit::ConvertFilter2Exo_TrackScaleJudge_RangeBegin, 30);
 			/*
@@ -65,22 +66,12 @@ namespace patch {
 						 RET
 			*/
 
-			static const char code_put[] =
-				"\x8a\x46\x03"				// MOV AL, BYTE PTR [ESI + 3H]
-				"\xa8\x04"					// TEST AL, 04H
-				"\x75\x03"					// JNZ SKIP, 03H
-				"\x33\xc0"					// XOR EAX, EAX
-				"\xc3"						// RET
-				"\x8b\x86\xcc\x00\x00\x00"	// MOV EAX, DWORD PTR [ESI + CCH] ; filter_param_ptr->track_scale
-				"\xc3"						// RET
-				;
-			memcpy(cursor, code_put, sizeof(code_put) - 1);
 
-			auto apply = [&cursor](uint32_t ofs, std::optional<restorable_patch>& rp) {
+			auto apply = [](uint32_t ofs, std::optional<restorable_patch>& rp) {
 				char injection[6];
 				injection[0] = '\x90'; // nop
 				injection[1] = '\xe8'; // call rel32
-				store_i32(&injection[2], CalcNearJmp(ofs + 2, reinterpret_cast<i32>(cursor)));
+				store_i32(&injection[2], CalcNearJmp(ofs + 2, reinterpret_cast<i32>(&asm_func)));
 				rp.emplace(ofs, injection, sizeof(injection));
 			};
 
@@ -88,7 +79,6 @@ namespace patch {
 			apply(GLOBAL::exedit_base + OFS::ExEdit::ConvertFilter2Exo_TrackScaleJudge_Overwrite2, rp2);
 			apply(GLOBAL::exedit_base + OFS::ExEdit::ConvertFilter2Exo_TrackScaleJudge_Overwrite3, rp3);
 
-			cursor += sizeof(code_put) - 1;
 
 			rp1->switching(enabled);
 			rp2->switching(enabled);

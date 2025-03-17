@@ -17,6 +17,16 @@
 
 #ifdef PATCH_SWITCH_CAMERA_SCENE
 namespace patch {
+
+	__declspec(naked) void __cdecl camera_scene_t::asm_func_camera_mode() {
+		__asm {
+			mov     ecx, dword ptr [esi + 0x0000011C]
+			mov     edx, dword ptr [ee.x13596c]
+			mov     dword ptr [ecx * 4 + edx], eax
+			ret
+		}
+	}
+
 	BOOL __cdecl camera_scene_t::video_func_main_wrap(ExEdit::FilterProcInfo* efpip, AviUtl::FilterProcInfo* fpip, int end_layer, int frame, int subframe, int scene_idx, ExEdit::ObjectFilterIndex ofi) {
 		if ((*(int*)&efpip->object_flag & 0x10000) == 0) {
 			return reinterpret_cast<BOOL(__cdecl*)(AviUtl::FilterPlugin*, AviUtl::FilterProcInfo*, int, int, int, int, ExEdit::ObjectFilterIndex)>(GLOBAL::exedit_base + OFS::ExEdit::video_func_main)(NULL, fpip, end_layer, frame, subframe, scene_idx, ofi);

@@ -36,6 +36,18 @@ namespace patch {
 
 		inline static const char key[] = "ggo_bitmap_text";
 
+		inline static struct _ofs {
+			int32_t x5fecd = 0x5fecd;
+			int32_t x1b2b0c = 0x1b2b0c;
+			int32_t x50c0c = 0x50c0c;
+			int32_t x50cf6 = 0x50cf6;
+		}ee;
+		static void __cdecl asm_func_hp_text();
+		static void __cdecl asm_func_hp_setfont();
+		static void __cdecl asm_func_ggo_pre();
+		static void __cdecl asm_func_ggo();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 	public:
 
 		inline static const char cb_str[] = "ｱﾝﾁｴｲﾘｱｽ無し";
@@ -46,7 +58,8 @@ namespace patch {
 			if (!fast::textborder.is_enabled())return;
 			if (!borderonly_text.is_enabled())return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 			{ // ｱﾝﾁｴｲﾘｱｽ無し の場合に高精度モード処理は無効にする
 				{ // テキスト
 					/*
@@ -55,21 +68,19 @@ namespace patch {
 						↓
 						1008a87c 90                 nop
 						1008a880 e8XxXxXxXx         call    cursor
-					*/
 
-					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x08a87c, 6);
-					h.store_i16(0, '\x90\xe8');
-					h.replaceNearJmp(2, cursor);
-					static const char code_put[] =
+
 						"\x33\xc0"                 // xor     eax,eax
 						"\x80\x3e\x07"             // cmp     byte ptr [esi],07
 						"\x74\x03"                 // jz      skip,03
 						"\x8a\x46\x07"             // mov     al,[esi+07]
 						"\xf7\xd9"                 // neg     ecx
 						"\xc3"                     // ret
-						;
-					memcpy(cursor, code_put, sizeof(code_put) - 1);
-					cursor += sizeof(code_put) - 1;
+					*/
+
+					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x08a87c, 6);
+					h.store_i16(0, '\x90\xe8');
+					h.replaceNearJmp(2, &asm_func_hp_text);
 				}
 				{ // obj.setfont
 					/*
@@ -91,14 +102,7 @@ namespace patch {
 					*/
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x05fec7, 6);
 					h.store_i16(0, '\x90\xe9');
-					h.replaceNearJmp(2, cursor);
-
-					store_i32(cursor, '\x6a\x00\x83\x3d'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::script_setfont_type); cursor += 4;
-					store_i32(cursor, '\x07\x74\x04\x6a'); cursor += 4;
-					store_i32(cursor, '\x01\xeb\x02\x6a'); cursor += 4;
-					store_i32(cursor, '\x00\x6a\x00\xe9'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + 0x5fecd - (int)cursor - 4); cursor += 4;
+					h.replaceNearJmp(2, &asm_func_hp_setfont);
 				}
 				{ // obj.load
 					// patch_lua_loadのバグ修正にて自然と対応される
@@ -114,11 +118,7 @@ namespace patch {
 						10050c0b 50                 push    eax
 						↓
 						10050c07 e9XxXxXxXx         jmp     cursor
-					*/
-					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x050c07, 5);
-					h.store_i8(0, '\xe9');
-					h.replaceNearJmp(1, cursor);
-					static const char code_put[] =
+
 						"\x52"                     // push    edx
 						"\x83\xbc\x24"
 						"\xb0\x01\x00\x00\x07"     // cmp     dword ptr [esp+000001b0],+07
@@ -129,10 +129,10 @@ namespace patch {
 						"\x57"                     // push    edi
 						"\x50"                     // push    eax
 						"\xe9"// XXXX              // jmp     ee+50c0c
-						;
-					memcpy(cursor, code_put, sizeof(code_put) - 1);
-					cursor += sizeof(code_put) - 1 + 4;
-					store_i32(cursor - 4, GLOBAL::exedit_base + 0x050c0c - (int32_t)cursor);
+					*/
+					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x050c07, 5);
+					h.store_i8(0, '\xe9');
+					h.replaceNearJmp(1, &asm_func_ggo_pre);
 				}
 				{
 					/*
@@ -142,11 +142,7 @@ namespace patch {
 						10050cf5 51                 push    ecx
 						↓
 						10050cf1 e9XxXxXxXx         jmp     cursor
-					*/
-					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x050cf1, 5);
-					h.store_i8(0, '\xe9');
-					h.replaceNearJmp(1, cursor);
-					static const char code_put[] =
+
 						"\x50"                     // push    eax
 						"\x83\xbc\x24"
 						"\xb0\x01\x00\x00\x07"     // cmp     dword ptr [esp+000001b0],+07
@@ -157,10 +153,10 @@ namespace patch {
 						"\x57"                     // push    edi
 						"\x51"                     // push    ecx
 						"\xe9"// XXXX              // jmp     ee+50cf6
-						;
-					memcpy(cursor, code_put, sizeof(code_put) - 1);
-					cursor += sizeof(code_put) - 1 + 4;
-					store_i32(cursor - 4, GLOBAL::exedit_base + 0x050cf6 - (int32_t)cursor);
+					*/
+					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x050cf1, 5);
+					h.store_i8(0, '\xe9');
+					h.replaceNearJmp(1, &asm_func_ggo);
 				}
 			}
 		}

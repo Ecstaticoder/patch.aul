@@ -37,19 +37,21 @@ namespace patch {
         static int __stdcall MessageBoxA_1(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
         static int __stdcall MessageBoxA_2(LPCSTR path, HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType);
         static int __stdcall MessageBoxA_import_exo(HWND hWnd, LPCSTR lpText, LPCSTR path);
-        static int __cdecl MessageBoxA_new_project_exo(LPCSTR path, void* param);
-        static int __cdecl MessageBoxA_exa(LPCSTR path);
+        static int __cdecl MessageBoxA_new_project_exo_exa(LPCSTR path);
 
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "failed_sjis_msgbox";
+
+        static void __cdecl asm_func_MessageBoxA_new_project_exo();
+        static void __cdecl asm_func_MessageBoxA_exa();
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
             { // audio & movie
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x00522b, 6);
@@ -81,20 +83,18 @@ namespace patch {
                     /*
                         1002a578 33c0               xor     eax,eax
                         1002a57a 5e                 pop     esi
-                        1002a57b 83c408             add     edp,+08
+                        1002a57b 83c408             add     esp,+08
                         ↓
                         1002a578 5e                 pop     esi
                         1002a579 e9XxXxXxXx         jmp     cursor
                         
-                        10000000 83c408             add     edp,+08
+                        10000000 83c408             add     esp,+08
                         10000000 e9XxXxXxxx         jmp     newfunc
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x02a578, 6);
                     h.store_i16(0, '\x5e\xe9');
-                    h.replaceNearJmp(2, cursor);
+                    h.replaceNearJmp(2, &asm_func_MessageBoxA_new_project_exo);
 
-                    store_i32(cursor, '\x83\xc4\x08\xe9'); cursor += 4;
-                    store_i32(cursor, (int)&MessageBoxA_new_project_exo - (int)cursor - 4); cursor += 4;
                 }
                 { // import
                     /*
@@ -134,9 +134,7 @@ namespace patch {
                     10000000 5e                 pop     esi
                     10000000 e9XxXxXxXx         jmp     newfunc
                 */
-                ReplaceNearJmp(GLOBAL::exedit_base + 0x4dbb5, cursor);
-                store_i16(cursor, '\x5e\xe9'); cursor += 2;
-                store_i32(cursor, (int)&MessageBoxA_exa - (int)cursor - 4); cursor += 4;
+                ReplaceNearJmp(GLOBAL::exedit_base + 0x4dbb5, &asm_func_MessageBoxA_exa);
             
             }
         }

@@ -34,6 +34,8 @@ namespace patch {
 
     inline class update_count_t {
 
+        static int inc_count_return1();
+
         bool enabled = true;
         bool enabled_i;
 
@@ -41,10 +43,20 @@ namespace patch {
 
         inline static int count = 0;
 
-        static int inc_count_return1() {
-            count++;
-            return 1;
-        }
+
+        inline static struct _ofs_au {
+            int32_t x13f13 = 0x13f13;
+            int32_t x2fd19 = 0x2fd19;
+        }au;
+        static void __cdecl asm_func_filter_switch1();
+        static void __cdecl asm_func_filter_switch2();
+        // add_base(GLOBAL::aviutl_base, &au, sizeof(au));
+        inline static struct _ofs_ee {
+            int32_t x1e0fa4 = 0x1e0fa4;
+        }ee;
+        static void __cdecl asm_func_ee_track_check();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 
     public:
 
@@ -53,7 +65,7 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::aviutl_base, &au, sizeof(au));
             {
                 /* 各プラグインのトラックバーやチェックなど
                     00430da9 b801000000         mov     eax,00000001
@@ -79,16 +91,8 @@ namespace patch {
                         cursor10 e9XxXxXxXx         jmp     au+13f01
                     */
                     OverWriteOnProtectHelper h(GLOBAL::aviutl_base + 0x13efb, 5);
-                    h.store_i8(0, '\xe9');
-                    h.replaceNearJmp(1, cursor);
-
-                    store_i16(cursor, '\xff\x05'); cursor += 2;
-                    store_i32(cursor, &count); cursor += 4;
-                    store_i32(cursor, '\x83\x7f\x40\x00'); cursor += 4;
-                    store_i16(cursor, '\x0f\x84'); cursor += 2;
-                    store_i32(cursor, GLOBAL::aviutl_base + 0x13f13 - (int)cursor - 4); cursor += 4;
-                    store_i8(cursor, '\xe9'); cursor++;
-                    store_i32(cursor, GLOBAL::aviutl_base + 0x13f01 - (int)cursor - 4); cursor += 4;
+                    h.store_i8(0, '\xe8'); // callにしてasm側でesp調整
+                    h.replaceNearJmp(1, &asm_func_filter_switch1);
                 }
                 {
                     /*
@@ -105,16 +109,8 @@ namespace patch {
 
                     */
                     OverWriteOnProtectHelper h(GLOBAL::aviutl_base + 0x30336, 5);
-                    h.store_i8(0, '\xe9');
-                    h.replaceNearJmp(1, cursor);
-
-                    store_i16(cursor, '\xff\x05'); cursor += 2;
-                    store_i32(cursor, &count); cursor += 4;
-                    store_i32(cursor, '\x83\x7e\x40\x00'); cursor += 4;
-                    store_i16(cursor, '\x0f\x84'); cursor += 2;
-                    store_i32(cursor, GLOBAL::aviutl_base + 0x2fd19 - (int)cursor - 4); cursor += 4;
-                    store_i8(cursor, '\xe9'); cursor++;
-                    store_i32(cursor, GLOBAL::aviutl_base + 0x30340 - (int)cursor - 4); cursor += 4;
+                    h.store_i8(0, '\xe8'); // callにしてasm側でesp調整
+                    h.replaceNearJmp(1, &asm_func_filter_switch2);
                 }
             }
         }
@@ -122,6 +118,7 @@ namespace patch {
 
             if (!enabled_i)return;
 
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
             /* 拡張編集のトラックバーやチェックなど
                 100357ea 8b2da40f1e10       mov     ebp,dword ptr [ExEdit.ObjectArrayPointer]
                 ↓
@@ -133,16 +130,9 @@ namespace patch {
                 cursor0c c3                 ret
 
             */
-            auto& cursor = GLOBAL::executable_memory_cursor;
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x357ea, 6);
             h.store_i16(0, '\x90\xe8');
-            h.replaceNearJmp(2, cursor);
-
-            store_i16(cursor, '\x8b\x2d'); cursor += 2;
-            store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer); cursor += 4;
-            store_i16(cursor, '\xff\x05'); cursor += 2;
-            store_i32(cursor, &count); cursor += 4;
-            store_i8(cursor, '\xc3'); cursor++;
+            h.replaceNearJmp(2, &asm_func_ee_track_check);
         }
 
         int get() {

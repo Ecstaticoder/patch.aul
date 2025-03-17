@@ -495,6 +495,40 @@ namespace patch {
         return TRUE;
     }
 
+    __declspec(naked) void __cdecl AudioFile_t::asm_func_if_speed_1() {
+        __asm {
+            cmp     dword ptr [ecx + 0x04], 0x9c
+            jg      jump_ee_x8fbf8
+            jmp     dword ptr [ee.x8fd30]
+
+            jump_ee_x8fbf8:
+            jmp     dword ptr [ee.x8fbf8]
+        }
+    }
+    __declspec(naked) void __cdecl AudioFile_t::asm_func_if_speed_2() {
+        __asm {
+            cmp     dword ptr[ecx + 0x04], 0x9c
+            jg      jump_ee_x8fbf8
+            jmp     dword ptr[ee.x8ffb1]
+
+            jump_ee_x8fbf8:
+            jmp     dword ptr[ee.x8fbf8]
+        }
+    }
+    __declspec(naked) void __cdecl AudioFile_t::asm_func_speed_1() {
+        __asm {
+            fild    dword ptr [eax + 0x04]
+            fimul   dword ptr [esp + 0x40]
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl AudioFile_t::asm_func_speed_2() {
+        __asm {
+            fild    dword ptr [ecx + 0x04]
+            fimul   dword ptr [esp + 0x40]
+            ret
+        }
+    }
 
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_OBJ_AUDIOFILE

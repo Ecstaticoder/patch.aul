@@ -162,7 +162,7 @@ inline bool InjectFunction_stdcall(uint32_t address, const void* function, size_
 		OverWriteOnProtectHelper protect(address, 7);
 		store_i8(address, '\xb8'); // mov eax, (i32)
 		store_i32(address + 1, cursor);
-		store_i16(address + 5, '\xff\xe0'); // call eax
+		store_i16(address + 5, '\xff\xe0'); // jmp eax
 	}
 	return TRUE;
 }
@@ -218,11 +218,11 @@ inline bool InjectFunction_fastcall(uint32_t address, void(*func)(), size_t asm_
 inline static intptr_t __cdecl push_new_args(void* function, int arg_ofs, int arg_n);
 
 /// <summary>
-/// 指定したアドレスの関数の直前に、自分の関数を実行する
-/// 実行後元の関数に戻る
+/// 指定したアドレスにて、自分の関数を実行する
+/// 実行後、元のアドレスに戻る
 /// __cdecl専用
 /// </summary>
-/// <param name="address"> 中断したい関数のアドレス </param>
+/// <param name="address"> 中断したいアドレス </param>
 /// <param name="function"> 挿入する関数 </param>
 /// <param name="asm_word_n"> 命令単位に合った数(5以上) </param>
 /// <param name="stack_s"> 何番目のスタックから引数にするか(4byte単位) </param>
@@ -252,12 +252,12 @@ inline void InjectionFunction_push_args_cdecl(uint32_t address, const uint32_t f
 	}
 
 	// args eax,ecx,edx
-	store_i8(cursor, 0xb8); cursor++;
+	store_i8(cursor, 0xb8); cursor++; // mov eax, function
 	store_i32(cursor, function); cursor += 4;
-	store_i8(cursor, 0xb9); cursor++;
-	store_i32(cursor, stack_s); cursor += 4;
-	store_i8(cursor, 0xba); cursor++;
+	store_i8(cursor, 0xb9); cursor++; // mov ecx, arg_n
 	store_i32(cursor, arg_n); cursor += 4;
+	store_i8(cursor, 0xba); cursor++; // mov edx, stack_s
+	store_i32(cursor, stack_s); cursor += 4;
 	store_i8(cursor, 0xe8); cursor++;
 	store_i32(cursor, CalcNearJmp((uint32_t)cursor, (uint32_t)push_new_args)); cursor += 4;
 
@@ -283,27 +283,23 @@ inline void InjectionFunction_push_args_cdecl(uint32_t address, const uint32_t f
 	h.replaceNearJmp(1, cursor0);
 }
 
-inline __declspec(naked) intptr_t __cdecl push_new_args(void* function, int arg_ofs, int arg_n) {
+inline __declspec(naked) intptr_t push_new_args(void* eax_function, int ecx_arg_n, int edx_arg_of) {
     __asm {
-        push    ebx
-        add     ecx, edx
-        xor     ebx, ebx
-        lea     ecx, [esp + ecx * 4]
-        test    edx, edx
+        push    ebp
+		mov     ebp, esp
+        add     edx, ecx
+        lea     edx, [esp + edx * 4]
+        test    ecx, ecx
         jle     skip
-			mov     ebx, edx
-
 			back:
-				push    dword ptr [ecx]
-				sub     ecx, 4
-				dec     edx
-			jg      back
+				push    dword ptr [edx]
+				sub     edx, 4
+			loop    back
 		skip:
         
-		shl     ebx, 2
         call    eax
-        add     esp, ebx
-        pop     ebx
+        mov     esp, ebp
+        pop     ebp
         ret
     }
 }
@@ -312,8 +308,8 @@ inline __declspec(naked) intptr_t __cdecl push_new_args(void* function, int arg_
 /**
  * @brief __fastcallのfuncを実行する。スタック除去のタイミングが問題にならないように実行できる
  *
- * @param func __fastcallの関数のポインタ
  * @param arg_n funcの引数の数（最小3）
+ * @param func __fastcallの関数のポインタ
  * @param arg0 1番目の引数
  * @param arg1 2番目の引数
  * @param arg2 3番目の引数
@@ -323,29 +319,29 @@ inline __declspec(naked) intptr_t __cdecl push_new_args(void* function, int arg_
  * @note 引数が2個以下の場合はこの関数を経由する意味は無いため出来ないようにしました。func(arg0, arg1)で呼び出してください
  * @warning 浮動小数や非32bitの引数は考慮していない
  */
-inline __declspec(naked) intptr_t __cdecl fastcall_caller(void* func, int arg_n, intptr_t arg0, intptr_t arg1, intptr_t arg2, ...) {
-    __asm {
-        push ebp
-        mov ebp, esp
-        mov ecx, [ebp + 12]
-        sub ecx, 2
-        jg skip_arg_count_min
-			mov ecx, 1
-		skip_arg_count_min:
-        lea eax, [ebp + 20 + ecx*4]
-
-		push_args_loop:
-			push dword ptr [eax]
-			sub eax, 4
-        loop push_args_loop
-
-        mov ecx, [ebp + 16]
-        mov edx, [ebp + 20]
-        mov eax, [ebp + 8]
-        call eax
-
-        mov esp, ebp
-        pop ebp
-        ret
-    }
+inline __declspec(naked) intptr_t __cdecl fastcall_caller(int arg_n, void* func, intptr_t arg0, intptr_t arg1, intptr_t arg2, ...) {
+	__asm {
+		mov edx, ebp
+		mov ecx, dword ptr [esp + 0x04]
+		lea ebp, dword ptr [esp - 0x0c]
+		add ecx, 0x03
+		SHIFT_STACK:
+			mov eax, dword ptr [ebp + 0x0c]
+			mov dword ptr [ebp], eax
+			add ebp, 0x04
+		loop SHIFT_STACK
+		mov dword ptr [ebp], edx
+		mov dword ptr [ebp + 0x04], esp
+		mov eax, dword ptr [esp - 0x0c]
+		mov dword ptr [ebp + 0x08], eax
+		mov edx, dword ptr [esp + 0x04]
+		mov ecx, dword ptr [esp]
+		add esp, 0x08
+		call dword ptr [esp - 0x0c]
+		mov ecx, dword ptr [ebp + 0x08]
+		mov esp, dword ptr [ebp + 0x04]
+		mov dword ptr [esp], ecx
+		mov ebp, dword ptr [ebp]
+		ret
+	}
 }

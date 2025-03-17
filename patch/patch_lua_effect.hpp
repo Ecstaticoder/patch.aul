@@ -15,7 +15,6 @@
 #include "macro.h"
 
 #ifdef PATCH_SWITCH_LUA_EFFECT
-#include <memory>
 
 #include "global.hpp"
 #include "offset_address.hpp"
@@ -26,18 +25,25 @@
 namespace patch {
 
     // init at exedit load
-    // obj.effect("filter_name")にてefp->processingが変わらないのを修正
+    // obj.effect("filter_name")にてefp->proccesingが変わらないのを修正
 
     inline class lua_effect_t {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "lua.effect";
 
+        inline static struct _ofs {
+            int32_t script_efp_ptr = OFS::ExEdit::script_efp;
+        }ee;
+        static void __cdecl asm_func();
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             {
                 /*
@@ -53,24 +59,9 @@ namespace patch {
                     10000000 c3                 ret
                 */
 
-                auto& cursor = GLOBAL::executable_memory_cursor;
-
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x5d20e, 6);
                 h.store_i16(0, '\x90\xe8');
-                h.replaceNearJmp(2, cursor);
-
-                static const char code_put[] =
-                    "\x8b\x3dXXXX"              // mov     edi,dword ptr [ee+1b2b10]
-                    "\x8b\xbf\xe4\x00\x00\x00"  // mov     edi,dword ptr [edi+000000e4]
-                    "\x89\xbb\xe4\x00\x00\x00"  // mov     dword ptr [ebx+000000e4],edi
-                    "\x89\x83\xf4\x00\x00\x00"  // mov     dword ptr [ebx+000000f4],eax
-                    "\xc3"                      // ret
-                    ;
-
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                store_i32(cursor + 2, GLOBAL::exedit_base + OFS::ExEdit::script_efp);
-
-                cursor += sizeof(code_put) - 1;
+                h.replaceNearJmp(2, &asm_func);
 
             }
         }

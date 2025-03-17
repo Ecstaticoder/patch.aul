@@ -39,5 +39,21 @@ namespace patch {
         }
     }
 
+    __declspec(naked) void __cdecl swap_filter_t::asm_func() {
+        __asm {
+            test    eax, eax
+            jl      skip
+                mov     edi, eax
+            skip:
+            push    ecx
+            push    esi
+            push    ebp
+            push    edi
+            call    prev_swap
+            pop     ecx
+            ret
+        }
+    }
+
 } // namespace patch
 #endif // ifdef PATCH_SWAP_FILTER

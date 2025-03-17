@@ -30,7 +30,7 @@ namespace patch {
     // init at exedit load
     // プロジェクト読み込み時のバグ修正
 
-    // 異常なオブジェクトを削除するように変更
+    // (未) 異常なオブジェクトを削除するように変更
 
     inline class aup_load_t {
         //static int __cdecl func_project_load_end();
@@ -40,6 +40,11 @@ namespace patch {
 
         inline static const char key[] = "aup_load";
 
+        inline static struct _ofs {
+            int32_t x1e0fa0 = 0x1e0fa0;
+        }ee;
+        static void __cdecl asm_func_select_idx();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
     public:
 
@@ -47,6 +52,8 @@ namespace patch {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             { // 選択中のオブジェクトのIDが異常値になっている時にエラーとなるのを修正
                 /*
@@ -59,25 +66,17 @@ namespace patch {
 
                     10000000 8b4718             mov     eax,dword ptr [edi+18]
                     10000000 3b05XxXxXxXx       cmp     eax,dword ptr [ee+1e0fa0]
-                    10000000 7c06               jnl     skip,03
+                    10000000 7c06               jl      skip,06
                     10000000 83c8ff             or      eax,0xffffffff
                     10000000 894718             mov     dword ptr [edi+18],eax
                     10000000 85c0               test    eax,eax
                     10000000 c3                 ret
 
                 */
-                auto& cursor = GLOBAL::executable_memory_cursor;
 
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x325a1, 8);
                 h.store_i32(0, '\x83\xc4\x14\xe8');
-                h.replaceNearJmp(4, cursor);
-
-                store_i32(cursor, '\x8b\x47\x18\x3b'); cursor += 4;
-                store_i8(cursor, '\x05'); cursor++;
-                store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::ObjectAllocNum); cursor += 4;
-                store_i32(cursor, '\x7c\x06\x83\xc8'); cursor += 4;
-                store_i32(cursor, '\xff\x89\x47\x18'); cursor += 3;
-                store_i32(cursor, '\x18\x85\xc0\xc3'); cursor += 4;
+                h.replaceNearJmp(4, &asm_func_select_idx);
             }
             /*
             { // 読み込み後の最後に実行する関数を追加

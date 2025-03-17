@@ -38,6 +38,9 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "obj_waveform";
+
+        static void __cdecl asm_func();
+
     public:
 
 
@@ -46,7 +49,6 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
             { // 再生位置の最小値を変更する
                 // set_track_statusにて最小値0を-128に
                 OverWriteOnProtectHelper(GLOBAL::exedit_base + 0x8f2c1, 1).store_i8(0, 0x80);
@@ -66,18 +68,15 @@ namespace patch {
                     ↓
                     1008ee1c 90                 nop
                     1008ee1d e8XxXxXxXx         call    cursor
-                */
-                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8ee1c, 6);
-                h.store_i16(0, '\x90\xe8');
-                h.replaceNearJmp(2, cursor);
-                static const char code_put[] = {
+
                     "\x83\xf8\x80"             // cmp     eax,-80
                     "\x7d\x05"                 // jnl     skip,05
                     "\xb8\x80\xff\xff\xff"     // mov     eax,ffffff80
-                    "\xc3"                     // ret 
-                };
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                cursor += sizeof(code_put) - 1;
+                    "\xc3"                     // ret
+                */
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8ee1c, 6);
+                h.store_i16(0, '\x90\xe8');
+                h.replaceNearJmp(2, &asm_func);
 
             }
             { // 波形タイプが0で参照ファイルより読み込ませる時の横解像度の最大値を上げる

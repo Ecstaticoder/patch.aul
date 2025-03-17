@@ -43,5 +43,14 @@ namespace patch {
 		HWND hWnd = *(HWND*)(GLOBAL::exedit_base + OFS::ExEdit::exedit_hwnd);
 		MessageBoxA(hWnd, lpText, lpCaption, MB_TOPMOST | MB_ICONWARNING | MB_TASKMODAL);
 	}
+	__declspec(naked) void __cdecl failed_file_drop_t::asm_func() {
+		__asm {
+			lea     ecx, dword ptr [esp + 0x000000D0]
+			push    ecx
+			call    MessageBoxA_drop
+			jmp     dword ptr [ee.x43b4c]
+		}
+	}
+
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_FAILED_FILE_DROP

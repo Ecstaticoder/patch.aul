@@ -41,6 +41,15 @@ namespace patch::exfilter {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "exfilter.gradation";
+
+        inline static struct _ofs {
+            int32_t x5922d = 0x5922d;
+            int32_t x1b2074 = 0x1b2074;
+            int32_t x59216 = 0x59216;
+        }ee;
+        static void __cdecl asm_func_apend_form();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
         static BOOL __cdecl func_proc(ExEdit::Filter* efp, ExEdit::FilterProcInfo* efpip);
 
@@ -67,7 +76,7 @@ namespace patch::exfilter {
             enabled_i = enabled;
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             auto efp = reinterpret_cast<ExEdit::Filter*>(GLOBAL::exedit_base + OFS::ExEdit::efGradation_ptr);
             efp->check_name[1] = check_name_1;
@@ -100,16 +109,7 @@ namespace patch::exfilter {
                 constexpr int vp_begin = 0x59211;
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 5);
                 h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
-
-                store_i8(cursor, '\xe8'); cursor++;
-                store_i32(cursor, (int)&apend_form - (int)cursor - 4); cursor += 4;
-                store_i32(cursor, '\x85\xc0\x0f\x85'); cursor += 4;
-                store_i32(cursor, GLOBAL::exedit_base + 0x5922d - (int)cursor - 4); cursor += 4;
-                store_i16(cursor, '\x57\xa1'); cursor += 2;
-                store_i32(cursor, GLOBAL::exedit_base + 0x1b2074); cursor += 4;
-                store_i16(cursor, '\x56\xe9'); cursor += 2;
-                store_i32(cursor, GLOBAL::exedit_base + 0x59216 - (int)cursor - 4); cursor += 4;
+                h.replaceNearJmp(1, &asm_func_apend_form);
             }
         }
 

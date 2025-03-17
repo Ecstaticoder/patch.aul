@@ -24,7 +24,16 @@ namespace patch {
         }
         return ret;
     }
+    __declspec(naked) void __cdecl trackbar_t::asm_func_wheel() {
+        __asm {
+            cmp     dword ptr [ebp + 0x0C], 0x0000020A
+            jnz     jmp_au_x5d342
+            jmp     dword ptr [au.x5d32a]
 
+            jmp_au_x5d342:
+            jmp     dword ptr [au.x5d342]
+        }
+    }
     /*
     LRESULT __cdecl trackbar_t::trackbar_WndProc_wrap(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam) {
         if (message == WM_MOUSEWHEEL)return 0;

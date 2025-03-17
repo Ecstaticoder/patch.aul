@@ -17,6 +17,22 @@
 
 #ifdef PATCH_SWITCH_AUP_LOAD
 namespace patch {
+
+	__declspec(naked) void __cdecl aup_load_t::asm_func_select_idx() {
+		__asm {
+			mov     eax,dword ptr [ee.x1e0fa0]
+			mov     eax,[eax]
+			cmp     dword ptr [edi+0x18],eax
+			jl      SKIP
+				or      eax,0xffffffff
+				mov     dword ptr [edi+0x18],eax
+			SKIP:
+			mov     eax,dword ptr [edi+0x18]
+			test    eax,eax
+			ret
+		}
+	}
+
 	/* // redo.cppのset_undoの部分にて、別シーンであれば切り替えをしなければまずそう
 	int __cdecl aup_load_t::func_project_load_end() {
 		int n1 = 0;

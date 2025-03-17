@@ -36,31 +36,32 @@ namespace patch {
 
 		static LRESULT __stdcall SendMessageA_TBM_SETPOS_wrap(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
+		inline static struct _ofs {
+			int32_t x5d342 = 0x5d342;
+			int32_t x5d32a = 0x5d32a;
+		} au;
+		static void __cdecl asm_func_wheel();
+		// add_base(GLOBAL::aviutl_base, &au, sizeof(au));
+
 	public:
 		void init() {
 			enabled_i = enabled;
 
 			if (!enabled_i)return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
+			add_base(GLOBAL::aviutl_base, &au, sizeof(au));
 
 			{ // マウスホイールでトラックバーが動くのを修正
 
 				constexpr int vp_begin = 0x5d1f2;
 				OverWriteOnProtectHelper h(GLOBAL::aviutl_base + vp_begin, 0x5d203 - vp_begin);
-				h.replaceNearJmp(0x5d1f2 - vp_begin, cursor);
-				h.replaceNearJmp(0x5d1ff - vp_begin, cursor);
+				h.replaceNearJmp(0x5d1f2 - vp_begin, &asm_func_wheel);
+				h.replaceNearJmp(0x5d1ff - vp_begin, &asm_func_wheel);
 				/*
 					00000000 817d0c0a020000     cmp     dword ptr [ebp+0c],0000020a ; WM_MOUSEWHEEL
 					00000000 0f85XxXxXxXx       jnz     au+5d342
 					00000000 e9XxXxXxXx         jmp     au+5d32a
 				*/
-				store_i32(cursor, '\x81\x7d\x0c\x0a'); cursor += 4;
-				store_i32(cursor, '\x02\x00\x00\x0f'); cursor += 4;
-				store_i8(cursor, '\x85'); cursor++;
-				store_i32(cursor, GLOBAL::aviutl_base + 0x5d342 - (int)cursor - 4); cursor += 4;
-				store_i8(cursor, '\xe9'); cursor++;
-				store_i32(cursor, GLOBAL::aviutl_base + 0x5d32a - (int)cursor - 4); cursor += 4;
 			}
 
 			{ // トラックバーでクリックした位置に直接移動する にて-1への移動が出来ないのを修正

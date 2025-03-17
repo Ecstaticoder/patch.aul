@@ -56,12 +56,20 @@ namespace patch {
 		bool enabled_i;
 		inline static const char key[] = "scene_vram";
 
+		inline static struct _ofs {
+			int32_t x135c64 = 0x135c64;
+		}ee;
+		static void __cdecl asm_func();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 	public:
 
 		void init() {
 			enabled_i = enabled;
 
 			if (!enabled_i)return;
+
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
 			{   // scene_obj
 				constexpr int vp_begin = 0x2a770;
@@ -97,20 +105,10 @@ namespace patch {
 				  (int)cache_ptr += (yca_vram_w * yca_vram_h * sizeof(ExEdit::PixelYCA) + 16 - 12);
 				*/
 				
-				auto& cursor = GLOBAL::executable_memory_cursor;
-
 				constexpr int vp_begin = 0x2a872;
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x2a877 - vp_begin);
 				h.store_i8(0x2a872 - vp_begin, '\xe8');
-				h.replaceNearJmp(0x2a873 - vp_begin, cursor);
-
-				store_i32(cursor, '\x8d\x51\xff\x0f'); cursor += 4;
-				store_i16(cursor, '\xaf\x15'); cursor += 2;
-				store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::yca_vram_h); cursor += 4;
-				store_i32(cursor, '\x8d\x34\xd7\x83'); cursor += 4;
-				store_i32(cursor, '\xc6\x04\xc1\xe1'); cursor += 4;
-				store_i16(cursor, '\x05\xc3'); cursor += 2;
-				
+				h.replaceNearJmp(0x2a873 - vp_begin, &asm_func);
 			}
 		}
 

@@ -72,13 +72,24 @@ namespace patch::fast {
 		bool enabled_i;
 		inline static const char key[] = "fast.yc_filter_effect";
 
+		inline static struct _ofs {
+			int32_t x835fe = 0x835fe;
+			int32_t x83603 = 0x83603;
+			int32_t x5231c = 0x5231c;
+			int32_t x52345 = 0x52345;
+			int32_t x14621 = 0x14621;
+		}ee;
+		static void __cdecl asm_func_scene();
+		static void __cdecl asm_func_framebuffer();
+		static void __cdecl asm_func_clipping();
+
 	public:
 
 		void init() {
 			enabled_i = enabled;
 			if (!enabled_i)return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
 			{ // main
 				/*
@@ -215,21 +226,9 @@ namespace patch::fast {
 					constexpr int vp_begin = 0x835e3;
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x83637 - vp_begin);
 					h.store_i8(0x835e3 - vp_begin, '\xe9');
-					h.replaceNearJmp(0x835e4 - vp_begin, cursor);
+					h.replaceNearJmp(0x835e4 - vp_begin, &asm_func_scene);
 					h.store_i16(0x8362d - vp_begin, '\x89\x9d');
 					h.store_i32(0x83633 - vp_begin, '\x0f\x1f\x40\x00');
-
-					store_i32(cursor, '\x74\x0c\x68\x03'); cursor += 4;
-					store_i32(cursor, '\x00\x00\x13\x33'); cursor += 4;
-					store_i16(cursor, '\xdb\xe9'); cursor += 2;
-					store_i32(cursor, GLOBAL::exedit_base + 0x83603 - (int)cursor - 4); cursor += 4;
-					store_i32(cursor, '\xf7\x45\x00\x40'); cursor += 4;
-					store_i32(cursor, '\x00\x00\x00\x74'); cursor += 4;
-					store_i32(cursor, '\x0c\x68\x00\x00'); cursor += 4;
-					store_i32(cursor, '\x00\x13\xbb\x01'); cursor += 4;
-					store_i32(cursor, '\x00\x00\x00\xeb'); cursor += 4;
-					store_i32(cursor, '\xe6\x33\xdb\xe9'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + 0x835fe - (int)cursor - 4); cursor += 4;
 				}
 				{ // フレームバッファ
 					ExEdit::Filter* efp = reinterpret_cast<ExEdit::Filter*>(GLOBAL::exedit_base + OFS::ExEdit::efFrameBuffer_ptr);
@@ -250,13 +249,7 @@ namespace patch::fast {
 					constexpr int vp_begin = 0x52317;
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x5231c - vp_begin);
 					h.store_i8(0x52317 - vp_begin, '\xe9');
-					h.replaceNearJmp(0x52318 - vp_begin, cursor);
-
-					store_i32(cursor, '\x85\xc0\x0f\x85'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + 0x52345 - (int)cursor - 4); cursor += 4;
-					store_i32(cursor, '\x0d\x00\x00\x00'); cursor += 4;
-					store_i16(cursor, '\x13\xe9'); cursor += 2;
-					store_i32(cursor, GLOBAL::exedit_base + 0x5231c - (int)cursor - 4); cursor += 4;
+					h.replaceNearJmp(0x52318 - vp_begin, &asm_func_framebuffer);
 				}
 			}
 			{ // 初めからアルファチャンネルを扱わないフィルタ効果
@@ -330,14 +323,8 @@ namespace patch::fast {
 					*/
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x1461c, 5);
 					h.store_i8(0, '\xe9');
-					h.replaceNearJmp(1, cursor);
-					store_i32(cursor, '\xb8\x00\x00\x00'); cursor += 4;
-					store_i32(cursor, '\x13\xf7\x86\xf4'); cursor += 4;
-					store_i32(cursor, '\x00\x00\x00\xff'); cursor += 4;
-					store_i32(cursor, '\xff\xff\xff\x75'); cursor += 4;
-					store_i32(cursor, '\x02\x0c\x03\x50'); cursor += 4;
-					store_i8(cursor, '\xe9'); cursor++;
-					store_i32(cursor, GLOBAL::exedit_base + 0x14621 - (int)cursor - 4); cursor += 4;
+					h.replaceNearJmp(1, &asm_func_clipping);
+
 				}
 
 				// 以下、別の条件付きなので0x40は付けない

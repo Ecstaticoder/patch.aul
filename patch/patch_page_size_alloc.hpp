@@ -34,6 +34,8 @@ namespace patch {
 		bool enabled_i;
 		inline static const char key[] = "page_size_alloc";
 
+		static void __cdecl asm_func();
+
 	public:
 
 		void init() {
@@ -54,17 +56,11 @@ namespace patch {
 					10000000 c3                 ret
 				*/
 
-				auto& cursor = GLOBAL::executable_memory_cursor;
-
 				constexpr int vp_begin = 0xd512;
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0xd51b - vp_begin);
 				h.store_i16(0xd512 - vp_begin, '\x0f\x10');
 				h.store_i8(0xd516 - vp_begin, '\xe8');
-				h.replaceNearJmp(0xd517 - vp_begin, cursor);
-
-				store_i32(cursor, '\x25\x00\xf0\xff'); cursor += 4;
-				store_i32(cursor, '\xff\x3d\x00\x00'); cursor += 3;
-				store_i32(cursor, '\x00\x04\x00\xc3'); cursor += 4;
+				h.replaceNearJmp(0xd517 - vp_begin, &asm_func);
 			}
 
 			{ // exdata buffer

@@ -47,6 +47,8 @@ namespace patch {
 
         inline static const char key[] = "obj_specialcolorconv";
 
+        static void __cdecl asm_func1();
+        static void __cdecl asm_func2();
 
     public:
         void init() {
@@ -54,22 +56,21 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
             {
                 {
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x015cca, 7);
-                    h.store_i32(0, '\x90\x90\xe8\x00');
-                    h.replaceNearJmp(3, cursor);
+                    h.store_i32(0, '\x66\x90\xe8\x00');
+                    h.replaceNearJmp(3, &asm_func1);
                 }
                 {
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x015e25, 7);
-                    h.store_i32(0, '\x90\x90\xe8\x00');
-                    h.replaceNearJmp(3, cursor);
+                    h.store_i32(0, '\x66\x90\xe8\x00');
+                    h.replaceNearJmp(3, &asm_func1);
                 }
                 {
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x015f77, 7);
-                    h.store_i32(0, '\x90\x90\xe8\x00');
-                    h.replaceNearJmp(3, cursor);
+                    h.store_i32(0, '\x66\x90\xe8\x00');
+                    h.replaceNearJmp(3, &asm_func1);
                 }
 
                 {
@@ -79,29 +80,24 @@ namespace patch {
 
                         ↓
 
-                        10015f77 9090               nop
+                        10015f77 6690               nop
                         10015f79 e8XxXxXxXx         call    executable_memory_cursor
 
-                            ; esi(pix->y)が0未満の場合、0にする
-                    */
-                    static const char code_put[] =
-                        "\x0f\xbf\x31"             // movsx   esi,dword ptr [ecx]
-                        "\x0f\xbf\x5d\x00"         // movsx   ebx,dword ptr [ebp+00]
+                        "\x0f\xbf\x31"             // movsx   esi,word ptr [ecx]
+                        "\x0f\xbf\x5d\x00"         // movsx   ebx,word ptr [ebp+00]
                         "\x85\xf6"                 // test    esi,esi
                         "\x7f\x02"                 // jg      skip,+02
                         "\x33\xf6"                 // xor     esi,esi
                         "\xc3"                     // ret
-                        ;
-
-                    memcpy(cursor, code_put, sizeof(code_put) - 1);
-                    cursor += sizeof(code_put) - 1;
+                            ; esi(pix->y)が0未満の場合、0にする
+                    */
                 }
             }
 
             {
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0156f5, 6);
                 h.store_i16(0, '\x90\xe8');
-                h.replaceNearJmp(2, cursor);
+                h.replaceNearJmp(2, asm_func2);
                 /*
                     100156f5 0fbf1f             movsx   ebx,dword ptr [edi]
                     100156f8 0fbf2e             movsx   ebp,dword ptr [esi]
@@ -111,19 +107,14 @@ namespace patch {
                     100156f5 90                 nop
                     100156f6 e8XxXxXxXx         call    executable_memory_cursor
 
-                        ; ebx(pix->y)が0未満の場合、0にする
-                */
-                static const char code_put[] =
-                    "\x0f\xbf\x1f"             // movsx   ebx,dword ptr [edi]
-                    "\x0f\xbf\x2e"             // movsx   ebp,dword ptr [esi]
+                    "\x0f\xbf\x1f"             // movsx   ebx,word ptr [edi]
+                    "\x0f\xbf\x2e"             // movsx   ebp,word ptr [esi]
                     "\x85\xdb"                 // test    ebx,ebx
                     "\x7f\x02"                 // jg      skip,+02
                     "\x33\xdb"                 // xor     ebx,ebx
                     "\xc3"                     // ret
-                    ;
-
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                cursor += sizeof(code_put) - 1;
+                        ; ebx(pix->y)が0未満の場合、0にする
+                */
             }
 
         }

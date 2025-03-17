@@ -37,11 +37,12 @@ namespace patch {
 
         inline static ExEdit::SceneSetting* scene_setting;
 
-        inline static void(__cdecl*set_undo)(unsigned int, unsigned int);
+        inline static void(__cdecl*set_undo)(uint32_t, uint32_t);
         inline static void(__cdecl*AddUndoCount)();
-        inline static int(__cdecl*efDraw_func_WndProc)(HWND, UINT, WPARAM, LPARAM, AviUtl::EditHandle*, ExEdit::Filter*);
-        inline static int(__cdecl*NormalizeExeditTimelineY)(int);
-        inline static void(__cdecl *add_track_value)(ExEdit::Filter*, int, int);
+        inline static uint32_t(__cdecl*object2idx)(ExEdit::Object*);
+        inline static int32_t(__cdecl*efDraw_func_WndProc)(HWND, UINT, WPARAM, LPARAM, AviUtl::EditHandle*, ExEdit::Filter*);
+        inline static int32_t(__cdecl*NormalizeExeditTimelineY)(int32_t);
+        inline static void(__cdecl *add_track_value)(ExEdit::Filter*, int32_t, int32_t);
         
         inline constexpr static int UNDO_INTERVAL = 1000;
 
@@ -56,23 +57,27 @@ namespace patch {
 			set_undo(reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SelectingObjectIdxArray)[object_idx], flag);
 		}
 
-        static int __cdecl change_any_exdata_set_undo(unsigned int select_id, void* dst, void* src, int size) {
-            if (memcmp(dst, src, size)) {
-                set_undo(reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SelectingObjectIdxArray)[select_id], 0);
-                return size;
-            }
-            return 0;
-        }
-
+        static int __stdcall change_any_exdata_set_undo(unsigned int select_id, void* dst, void* src, int size);
+        static void __cdecl asm_func_change_any_exdata_set_undo();
 
         static void __stdcall set_undo_pp(ExEdit::Filter* efp, int new_value, int* current_value_ptr);
+        static void __cdecl asm_func_set_undo_pp_movie_scene();
+        static void __cdecl asm_func_set_undo_pp_audio();
+        static void __cdecl asm_func_set_undo_pp_waveform();
+        static void __cdecl asm_func_set_undo_pp_sceneaudio();
 
         static int __stdcall f8d508(int object_idx);
 
         static void __cdecl f3e002();
 
+        static void __cdecl asm_func_split_group_set_undo();
+
+        static void __cdecl asm_func_set_undo_layer_set();
         static void __stdcall run_undo_flag8_layer_disp(int object_ofs, ExEdit::UndoData* ud);
         static void* __stdcall run_undo_flag0(ExEdit::Object* dst, ExEdit::Object* src, void* eax);
+        static void __cdecl asm_func_run_undo_flag0();
+
+        static void __cdecl asm_func_cb_moviesynthesis();
 
         static int __cdecl efDraw_func_WndProc_wrap_06e2b4(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam, AviUtl::EditHandle* editp, ExEdit::Filter* efp);
 
@@ -97,7 +102,8 @@ namespace patch {
         static ExEdit::UndoData* __stdcall set_undodata_layer_plus(ExEdit::UndoData* undodata, int layer_id);
         static void __stdcall set_layer_undodata_plus(ExEdit::UndoData* undodata, int layer_id);
 
-        static ExEdit::Object* __stdcall f42617();
+        static ExEdit::Object* __stdcall set_undo_layer_switch_sc();
+        static ExEdit::Object* __cdecl asm_func_set_undo_layer_switch_sc();
 
         static void __stdcall f4355c(ExEdit::Object* obj);
 
@@ -138,11 +144,11 @@ namespace patch {
 			
             set_undo = reinterpret_cast<decltype(set_undo)>(GLOBAL::exedit_base + OFS::ExEdit::set_undo);
             AddUndoCount = reinterpret_cast<decltype(AddUndoCount)>(GLOBAL::exedit_base + OFS::ExEdit::next_undo);
+            object2idx = reinterpret_cast<decltype(object2idx)>(GLOBAL::exedit_base + OFS::ExEdit::object2idx);
             efDraw_func_WndProc = reinterpret_cast<decltype(efDraw_func_WndProc)>(GLOBAL::exedit_base + 0x01b550);
             NormalizeExeditTimelineY = reinterpret_cast<decltype(NormalizeExeditTimelineY)>(GLOBAL::exedit_base + 0x032c10);
             add_track_value = reinterpret_cast<decltype(add_track_value)>(GLOBAL::exedit_base + 0x01c0f0);
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
 			// レイヤー削除→元に戻すで他シーンのオブジェクトが消える
 			{
@@ -170,35 +176,15 @@ namespace patch {
                 10000000 57                 push    edi
                 10000000 ff742424           push    dword ptr [esp+24] ; select_id
                 10000000 e8XxXxXxXx         call    new func
-                10000000 83c410             add     esp,10
                 10000000 5a                 pop     edx
                 10000000 8bc8               mov     ecx,eax
                 10000000 c1e902             shr     ecx,02
                 10000000 c3                 ret
                 */
 
-                static const char code_put[] = {
-                    "\x03\xf8"                 // add     edi,eax
-                    "\x52"                     // push    edx
-                    "\x51"                     // push    ecx
-                    "\x56"                     // push    esi
-                    "\x57"                     // push    edi
-                    "\xff\x74\x24\x24"         // push    dword ptr [esp+24] ; select_id
-                    "\xe8XXXX"                 // call    new func
-                    "\x83\xc4\x10"             // add     esp,10
-                    "\x5a"                     // pop     edx
-                    "\x8b\xc8"                 // mov     ecx,eax
-                    "\xc1\xe9\x02"             // shr     ecx,02
-                    "\xc3"                     // ret
-                };
-
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x04a933, 5);
                 h.store_i8(0, '\xe8');
-                h.replaceNearJmp(1, cursor);
-
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                store_i32(cursor + 11, (int)&change_any_exdata_set_undo - ((int)cursor + 15));
-                cursor += sizeof(code_put) - 1;
+                h.replaceNearJmp(1, &asm_func_change_any_exdata_set_undo);
 
             }
 
@@ -211,7 +197,7 @@ namespace patch {
                         1000637a 8b8ee4000000       mov     ecx,dword ptr [esi+000000e4]
                         ↓
                         10006378 0f1f00             nop
-                        1000637b e8XxXxXxXx         jmp     cursor
+                        1000637b e8XxXxXxXx         call    cursor
 
                         10000000 51                 push    ecx
                         10000000 50                 push    eax
@@ -223,18 +209,13 @@ namespace patch {
                     { // movie
                         OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x006378, 8);
                         h.store_i32(0, '\x0f\x1f\x00\xe8');
-                        h.replaceNearJmp(4, cursor); 
+                        h.replaceNearJmp(4, &asm_func_set_undo_pp_movie_scene); 
                     }
                     { // scene
                         OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0838fd, 8);
                         h.store_i32(0, '\x0f\x1f\x00\xe8');
-                        h.replaceNearJmp(4, cursor);
+                        h.replaceNearJmp(4, &asm_func_set_undo_pp_movie_scene);
                     }
-
-                    store_i32(cursor, '\x51\x50\x56\xe8'); cursor += 4;
-                    store_i32(cursor, (uint32_t)&set_undo_pp - (uint32_t)(cursor + 4)); cursor += 4;
-                    store_i32(cursor, '\x8b\x8e\xe4\x00'); cursor += 3;
-                    store_i32(cursor, '\x00\x00\x00\xc3'); cursor += 4;
                 }
                 { // audio
                     /*
@@ -250,12 +231,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x08fde9, 8);
                     h.store_i32(0, '\x0f\x1f\x00\xe8');
-                    h.replaceNearJmp(4, cursor);
-
-                    store_i32(cursor, '\x52\x50\x56\xe8'); cursor += 4;
-                    store_i32(cursor, (uint32_t)&set_undo_pp - (uint32_t)(cursor + 4)); cursor += 4;
-                    store_i32(cursor, '\x8b\x96\xe4\x00'); cursor += 3;
-                    store_i32(cursor, '\x00\x00\x00\xc3'); cursor += 4;
+                    h.replaceNearJmp(4, &asm_func_set_undo_pp_audio);
                 }
                 { // waveform
                     /*
@@ -276,12 +252,7 @@ namespace patch {
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x08ee2e, 9);
                     h.store_i32(0, '\x83\xc2\x0c\x90');
                     h.store_i8(4, '\xe8');
-                    h.replaceNearJmp(5, cursor);
-
-                    store_i32(cursor, '\x52\x50\x56\xe8'); cursor += 4;
-                    store_i32(cursor, (uint32_t)&set_undo_pp - (uint32_t)(cursor + 4)); cursor += 4;
-                    store_i32(cursor, '\x8b\x8e\xe4\x00'); cursor += 3;
-                    store_i32(cursor, '\x00\x00\x00\xc3'); cursor += 4;
+                    h.replaceNearJmp(5, &asm_func_set_undo_pp_waveform);
                 }
                 { // sceneaudio
                     /*
@@ -297,12 +268,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0844c8, 8);
                     h.store_i32(0, '\x0f\x1f\x00\xe8');
-                    h.replaceNearJmp(4, cursor);
-
-                    store_i32(cursor, '\x51\x50\x56\xe8'); cursor += 4;
-                    store_i32(cursor, (uint32_t)&set_undo_pp - (uint32_t)(cursor + 4)); cursor += 4;
-                    store_i32(cursor, '\x8b\x86\xe4\x00'); cursor += 3;
-                    store_i32(cursor, '\x00\x00\x00\xc3'); cursor += 4;
+                    h.replaceNearJmp(4, &asm_func_set_undo_pp_sceneaudio);
                 }
             }
 			
@@ -386,14 +352,7 @@ namespace patch {
 
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x3fc72, 6);
                 h.store_i16(0, '\x90\xe8');
-                h.replaceNearJmp(2, cursor);
-                store_i32(cursor, '\x51\x52\xe8\x00'); cursor += 3;
-                store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::object2idx - (uint32_t)(cursor + 4)); cursor += 4;
-                store_i32(cursor, '\x53\x50\xe8\x00'); cursor += 3;
-                store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::set_undo - (uint32_t)(cursor + 4)); cursor += 4;
-                store_i32(cursor, '\x83\xc4\x08\x5a'); cursor += 4;
-                store_i32(cursor, '\x59\x89\x8a\xbc'); cursor += 4;
-                store_i32(cursor, '\x04\x00\x00\xc3'); cursor += 4;
+                h.replaceNearJmp(2, &asm_func_split_group_set_undo);
             }
 
             // 他シーンのlayer_dispが-1になっている部分に関して、編集をしても整合性が取れるようにする
@@ -412,13 +371,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8d373, 7);
                     h.store_i32(0, '\x66\x90\xe8\x00');
-                    h.replaceNearJmp(3, cursor);
-                    static const char code_put[] = {
-                        "\x8d\x04\xc1"             // lea     eax,dword ptr [ecx+eax*8]
-                        "\x8b\x90\xc0\x05\x00\x00" // mov     edx,dword ptr [eax+000005c0]
-                        "\xc3"                     // ret
-                    };
-                    memcpy(cursor, code_put, sizeof(code_put) - 1); cursor += sizeof(code_put) - 1;
+                    h.replaceNearJmp(3, &asm_func_set_undo_layer_set);
                 }
                 {
                     /* flag8のrun_undoにて他シーンのlayer_dispは-1にする
@@ -445,17 +398,13 @@ namespace patch {
                         cursor00 50                 push    eax
                         cursor01 56                 push    esi
                         cursor02 57                 push    edi
-                        cursor03 e8XxXxXxXx         call    nesfunc
+                        cursor03 e8XxXxXxXx         call    newfunc
                         cursor09 c3                 ret
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8d6b2, 7);
                     h.store_i16(0, '\x52\xe8');
-                    h.replaceNearJmp(2, cursor);
+                    h.replaceNearJmp(2, &asm_func_run_undo_flag0);
                     h.store_i8(6, '\x5a');
-
-                    store_i32(cursor, '\x50\x56\x57\xe8'); cursor += 4;
-                    store_i32(cursor, (uint32_t)run_undo_flag0 - (uint32_t)(cursor + 4)); cursor += 4;
-                    store_i8(cursor, '\xc3'); cursor++;
                 }
             }
 
@@ -463,39 +412,23 @@ namespace patch {
             // 動画ファイル合成のコンボボックスを変更してもUndoデータが生成されない
             {
                 /*
-                    1000687c 0f840af9ffff       jz      1000618c
+                    10006882 898718010000       mov     dword ptr [edi+00000118],eax
                     ↓
-                    1000687c 90                 nop
-                    1000687d e9XxXxXxXx         jmp     cursor
+                    10006882 90                 nop
+                    10006883 e8XxXxXxXx         call    cursor
 
-                    10000000 0f84XxXxXxXx       jz      ee+618c
-                    10000000 50                 push    eax
                     10000000 8b5664             mov     edx,dword ptr [esi+64]
                     10000000 6a00               push    +00
                     10000000 ffb6e4000000       push    dword ptr [esi+000000e4]
+                    10000000 8bf0               mov     esi,eax
                     10000000 ff9280000000       call    dword ptr [edx+00000080]
                     10000000 83c408             add     esp,+08
-                    10000000 58                 pop     eax
-                    10000000 e9XxXxXxXx         jmp     ee+6882
+                    10000000 89b718010000       mov     dword ptr [edi+00000118],esi
+                    10000000 c3                 ret
                 */
-                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x687c, 6);
-                h.store_i16(0, '\x90\xe9'); // nop; jmp;
-                h.replaceNearJmp(2, cursor);
-
-                store_i16(cursor, '\x0f\x84'); cursor += 2; // jz
-                store_i32(cursor, GLOBAL::exedit_base + 0x618c - (uint32_t)(cursor + 4)); cursor += 4;
-                static const char code_put[] = {
-                    "\x50"                     // push    eax
-                    "\x8b\x56\x64"             // mov     edx,dword ptr [esi+64]
-                    "\x6a\x00"                 // push    +00
-                    "\xff\xb6\xe4\x00\x00\x00" // push    dword ptr [esi+000000e4]
-                    "\xff\x92\x80\x00\x00\x00" // call    dword ptr [edx+00000080]
-                    "\x83\xc4\x08"             // add     esp,+08
-                    "\x58"                     // pop     eax
-                    "\xe9"                     // jmp     ee+6882
-                };
-                memcpy(cursor, code_put, sizeof(code_put) - 1); cursor += sizeof(code_put) - 1;
-                store_i32(cursor, GLOBAL::exedit_base + 0x6882 - (uint32_t)(cursor + 4)); cursor += 4;
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x6882, 6);
+                h.store_i16(0, '\x90\xe8'); // nop; call;
+                h.replaceNearJmp(2, &asm_func_cb_moviesynthesis);
             }
 
             // 部分フィルタのマスクの種類を変更してもUndoデータが生成されない
@@ -726,11 +659,7 @@ namespace patch {
                 */
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x042617, 5);
                 h.store_i8(0, '\xe8');
-                h.replaceNearJmp(1, cursor);
-
-                store_i16(cursor, '\x52\xe8'); cursor += 2;
-                store_i32(cursor, (uint32_t)&f42617 - (uint32_t)(cursor + 4)); cursor += 4;
-                store_i16(cursor, '\x5a\xc3'); cursor += 2;
+                h.replaceNearJmp(1, &asm_func_set_undo_layer_switch_sc);
             }
 
             // カメラ制御の対象 を切り替えてもUndoデータが生成されない
@@ -742,7 +671,7 @@ namespace patch {
             // 上のオブジェクトでクリッピング を切り替えてもUndoデータが生成されない
             {
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0435ba, 8);
-                h.store_i32(0, '\x90\x90\x50\xe8'); // nop, push eax, call (rel32)
+                h.store_i32(0, '\x66\x90\x50\xe8'); // nop, push eax, call (rel32)
                 h.replaceNearJmp(4, &f435bd);
             }
 

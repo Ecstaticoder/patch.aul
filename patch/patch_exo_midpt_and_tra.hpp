@@ -18,6 +18,7 @@
 #ifdef PATCH_SWITCH_EXO_MIDPT_AND_TRA
 #include <exedit.hpp>
 #include "config_rw.hpp"
+#include "util.hpp"
 
 namespace patch {
 	// init at exedit load
@@ -32,6 +33,11 @@ namespace patch {
 		bool enabled_i;
 		inline static const char key[] = "exo_midpt_and_tra";
 
+		inline static struct _ofs {
+			int32_t x349b0 = 0x349b0;
+		}ee;
+		static void __cdecl asm_func();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
 	public:
 
@@ -39,24 +45,13 @@ namespace patch {
 			enabled_i = enabled;
 			if (!enabled_i)return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
-			// 100345d9 e8d2030000         call    exedit+349b0
+			/*
+				100345d9 e8d2030000         call    exedit+349b0
+			*/
 
-			OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0345da, 4);
-			h.replaceNearJmp(0, cursor);
-
-			static const char code_put[] =
-				"\x8b\x84\x24\x40\x01\x00\x00" // mov     eax,dword ptr [esp+140] ; flag
-				"\x85\xc0"                     // test    eax,eax
-				"\x0f\x84XXXX"                 // jz      exedit+349b0
-				"\xc3"                         // ret
-				;
-
-			memcpy(cursor, code_put, sizeof(code_put) - 1);
-			store_i32(cursor + 11, GLOBAL::exedit_base + 0x0349b0 - (uint32_t)(cursor + 15));
-			
-			cursor += sizeof(code_put) - 1;
+			ReplaceNearJmp(GLOBAL::exedit_base + 0x0345da, &asm_func);
 
 		}
 

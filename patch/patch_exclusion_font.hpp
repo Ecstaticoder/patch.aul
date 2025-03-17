@@ -34,12 +34,22 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "exclusion_font";
+
+        inline static struct _ofs {
+            int32_t x8cc8e = 0x8cc8e;
+            int32_t x8ccc2 = 0x8ccc2;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
 
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             /*
                 1008cc88 ff15a8a10910       call    dword ptr [KERNEL32.lstrlenA]
@@ -53,20 +63,10 @@ namespace patch {
                 10000000 59                 pop     ecx
                 10000000 e9XxXxXxXx         jmp     exedit + 0x8ccc2
             */
-            
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8cc88, 6);
             h.store_i16(0, '\x90\xe9');
-            h.replaceNearJmp(2, cursor);
-
-            store_i16(cursor, '\xff\x15'); cursor += 2;
-            store_i32(cursor, GLOBAL::exedit_base + 0x9a1a8); cursor += 4;
-            store_i32(cursor, '\x83\xf8\x20\x0f'); cursor += 4;
-            store_i8(cursor, '\x8c'); cursor += 1;
-            store_i32(cursor, GLOBAL::exedit_base + 0x8cc8e - (int)cursor - 4); cursor += 4;
-            store_i16(cursor, '\x59\xe9'); cursor += 2;
-            store_i32(cursor, GLOBAL::exedit_base + 0x8ccc2 - (int)cursor - 4); cursor += 4;
+            h.replaceNearJmp(2, &asm_func);
 
 
         }

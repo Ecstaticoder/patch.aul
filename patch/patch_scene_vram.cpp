@@ -56,5 +56,17 @@ namespace patch {
 		return ycp;
 	}
 
+
+	__declspec(naked) void __cdecl scene_vram_t::asm_func() {
+		__asm {
+			lea     edx, [ecx - 0x01]
+			mov     esi, dword ptr [ee.x135c64]
+			imul    edx, dword ptr [esi]
+			lea     esi, [edi + edx * 8 + 0x04]
+			shl     ecx, 0x05
+			ret
+		}
+	}
+
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_SCENE_VRAM

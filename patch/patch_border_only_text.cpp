@@ -19,12 +19,86 @@
 #ifdef PATCH_SWITCH_BORDER_ONLY_TEXT
 namespace patch {
 
-    void BorderOnlyText_t::cb_add_border() {
+    void BorderOnlyText_t::apend_type() {
         HWND cb_hwnd = *(HWND*)(GLOBAL::exedit_base + OFS::ExEdit::efTextShadowBorderComboHWND_ptr);
         SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)border_only_str);
         SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)border_thin_only_str);
         if (ggo_bitmap_text.is_enabled()) {
             SendMessageA(cb_hwnd, CB_ADDSTRING, 0, (LPARAM)ggo_bitmap_text.cb_str);
+        }
+    }
+    __declspec(naked) void __cdecl BorderOnlyText_t::asm_func_apend_type() {
+        __asm {
+            call    apend_type
+            mov     edi, dword ptr [ee.xb8f18]
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl BorderOnlyText_t::asm_func_if_type_1() {
+        __asm {
+            cmp     edi, 0x02
+            jnz     not_2
+                jmp     dword ptr [ee.x503d7]
+            not_2:
+            cmp     edi, 0x05
+            jnz     not_5
+                jmp     dword ptr [ee.x5035a]
+            not_5:
+            cmp     edi, 0x06
+            jnz     not_6
+                jmp     dword ptr [ee.x5039b]
+            not_6:
+            jmp     dword ptr [ee.x503cf]
+        }
+    }
+    __declspec(naked) void __cdecl BorderOnlyText_t::asm_func_if_type_2() {
+        __asm {
+            cmp     eax, 0x02
+            jnz     not_2
+                jmp     dword ptr [ee.x50872]
+            not_2:
+            cmp     eax, 0x05
+            jnz     not_5
+                jmp     dword ptr [ee.x507fb]
+            not_5:
+            cmp     eax, 0x06
+            jnz     not_6
+                jmp     dword ptr [ee.x50831]
+            not_6:
+            jmp     dword ptr [ee.x5085e]
+        }
+    }
+    __declspec(naked) void __cdecl BorderOnlyText_t::asm_func_if_type_3() {
+        __asm {
+            cmp     edx, 0x05
+            jz      BORDER_ONLY
+            cmp     edx, 0x06
+            jz      BORDER_ONLY
+            lea     eax, [edx - 0x01]
+            cmp     eax, 0x03
+            jmp     dword ptr [ee.x50e5b]
+
+            BORDER_ONLY:
+            push    dword ptr [esp + 0x18]
+            push    dword ptr [esp + 0x000001a4]
+            push    ecx
+            push    dword ptr [esp + 0x70]
+            mov     ecx, dword ptr [ee.x1aee24]
+            push    dword ptr [ecx]
+            mov     edx, dword ptr [ee.x1aee20]
+            push    dword ptr [edx]
+            mov     eax, dword ptr [ee.x1aebdc]
+            push    dword ptr [eax]
+            push    ebx
+            push    ebp
+            mov     ecx, dword ptr [ee.x1a5328]
+            push    dword ptr [ecx]
+            push    esi
+            push    edi
+            push    dword ptr [esp + 0x000001a8]
+            call    fast::TextBorder_t::create_font_border
+            add     esp, 0x34
+            jmp     dword ptr [ee.x50f9e]
         }
     }
     

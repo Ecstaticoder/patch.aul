@@ -47,7 +47,7 @@ namespace patch {
 	BOOL __fastcall audio_filtered_cache_t::audio_auf_func_proc_wrap(AviUtl::FilterProcInfo* fpip, char* profile, AviUtl::FilterPlugin* exit_fp) {
 
 		if (exit_fp != nullptr && has_flag(exit_fp->flag, AviUtl::FilterPlugin::Flag::AudioFilter)) {
-			return fastcall_caller((void*)(GLOBAL::aviutl_base + OFS::AviUtl::audio_auf_func_proc), 3, (intptr_t)fpip, (intptr_t)profile, (intptr_t)exit_fp);
+			return fastcall_caller(3, (void*)(GLOBAL::aviutl_base + OFS::AviUtl::audio_auf_func_proc), (intptr_t)fpip, (intptr_t)profile, (intptr_t)exit_fp);
 		}
 
 		int disp_scene_idx, undo_id_cur, undo_id_max;
@@ -97,7 +97,7 @@ namespace patch {
 			}
 		}
 		
-		BOOL ret = fastcall_caller((void*)(GLOBAL::aviutl_base + OFS::AviUtl::audio_auf_func_proc), 3, (intptr_t)fpip, (intptr_t)profile, (intptr_t)exit_fp);
+		BOOL ret = fastcall_caller(3, (void*)(GLOBAL::aviutl_base + OFS::AviUtl::audio_auf_func_proc), (intptr_t)fpip, (intptr_t)profile, (intptr_t)exit_fp);
 
 		if (ret) {
 			int buf_size = sizeof(cache_info) + fpip->audio_n * fpip->audio_ch * sizeof(*fpip->audiop) + 16;

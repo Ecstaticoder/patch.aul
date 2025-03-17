@@ -33,6 +33,8 @@ namespace patch {
 		bool enabled_i;
 		inline static const char key[] = "str_minusval";
 
+		static void __cdecl asm_func();
+
 	public:
 		void init() {
 			enabled_i = enabled;
@@ -52,11 +54,7 @@ namespace patch {
 
 				10002d5a 90                 nop
 				10002d5b e8XxXxXxXx         call    cursor
-			*/
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
-
-			static const char code_put[] = {
 				"\x85\xc9"                 // test    ecx,ecx
 				"\x7f\x1c"                 // jg      skip,1c
 				"\x7c\x18"                 // jl      skip,18
@@ -76,21 +74,19 @@ namespace patch {
 				"\xc3"                     // ret
 				"\x5e"                     // pop     esi
 				"\xc3"                     // ret
-			};
+			*/
 
 			{
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x2d5a, 6);
 				h.store_i16(0, '\x90\xe8');
-				h.replaceNearJmp(2, cursor);
+				h.replaceNearJmp(2, &asm_func);
 			}
 			{
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x2911c, 6);
 				h.store_i16(0, '\x90\xe8');
-				h.replaceNearJmp(2, cursor);
+				h.replaceNearJmp(2, &asm_func);
 			}
 
-			memcpy(cursor, code_put, sizeof(code_put) - 1);
-			cursor += sizeof(code_put) - 1;
 
 		}
 

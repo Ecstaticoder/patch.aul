@@ -42,12 +42,20 @@ namespace patch {
 
         inline static const char key[] = "str2int";
 
+        inline static struct _ofs {
+            int32_t x43493 = 0x43493;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
 
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             // 文字の先頭にスペースがあっても除外し、全角文字も対象にする
             ReplaceNearJmp(GLOBAL::exedit_base + 0x918b0, &str2int_wrap);
@@ -80,19 +88,14 @@ namespace patch {
                     1004349d f7d9               neg     ecx
                     1004349f 0f1f4000
                 */
-                auto& cursor = GLOBAL::executable_memory_cursor;
                 constexpr int vp_begin = 0x4347e;
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x434a3 - vp_begin);
                 h.store_i8(0x4347e - vp_begin, '\xe9');
-                h.replaceNearJmp(0x4347f - vp_begin, cursor);
+                h.replaceNearJmp(0x4347f - vp_begin, &asm_func);
                 h.store_i16(0x43499 - vp_begin, '\x85\xff');
                 h.store_i32(0x4349b - vp_begin, '\x74\x06\xf7\xd9');
                 h.store_i32(0x4349f - vp_begin, '\x0f\x1f\x40\x00');
                 
-                store_i32(cursor, '\x33\xc9\x33\xff'); cursor += 4;
-                store_i32(cursor, '\x3c\x2d\x75\x02'); cursor += 4;
-                store_i32(cursor, '\x47\x42\xe9\x00'); cursor += 3;
-                store_i32(cursor, GLOBAL::exedit_base + 0x43493 - (int)cursor - 4); cursor += 4;
             }
         }
         void switching(bool flag) {

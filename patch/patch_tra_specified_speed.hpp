@@ -38,6 +38,8 @@ namespace patch {
 
 		inline static const char key[] = "tra_specified_speed";
 
+		static int __cdecl asm_func();
+
 	public:
 
         void init() {
@@ -45,7 +47,6 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
             /*
 				1006821c 8b8cb7f8000000     mov     ecx,dword ptr [edi+esi*4+000000f8] ;ecx = obj[object_idx].track_value_left[track_begin]
@@ -55,18 +56,6 @@ namespace patch {
 				10068221 8b8cb7f8000000     mov     ecx,dword ptr [edi+esi*4+000000f8] ;ecx = obj[object_idx].track_value_left[track_begin]
 
 
-				; arg3_subframeが0以外の時はobj_frameが100倍されてarg3_subframeが加算されている
-				; 移動量指定では100で割るコードを忘れている
-            */
-
-
-			OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x06821c, 12);
-			h.store_i8(0, '\xe8');
-			h.replaceNearJmp(1, cursor);
-			h.store_i32(5, '\x8b\x8c\xb7\xf8');
-			h.store_i32(8, '\xf8\x00\x00\x00'); // \xf8は範囲ダブらせてstore_i32 * 2 で行っています
-
-			static const char code_put[] =
 				"\x0f\xaf\x44\x24\x5c"     // imul    eax,dword ptr [esp+5c] ;eax *= obj_frame
 				"\x8b\x4d\x10"             // mov     ecx,dword ptr [ebp+10] ;ecx = arg3_subframe
 				"\x85\xc9"                 // test    ecx,ecx
@@ -75,11 +64,18 @@ namespace patch {
 				"\x99"                     // cdq
 				"\xf7\xf9"                 // idiv    ecx ;edx = eax % ecx, eax /= ecx
 				"\xc3"                     // ret      ;return
-				;
 
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
+				; arg3_subframeが0以外の時はobj_frameが100倍されてarg3_subframeが加算されている
+				; 移動量指定では100で割るコードを忘れている
+            */
 
-            cursor += sizeof(code_put) - 1;
+
+			OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x06821c, 12);
+			h.store_i8(0, '\xe8');
+			h.replaceNearJmp(1, &asm_func);
+			h.store_i32(5, '\x8b\x8c\xb7\xf8');
+			h.store_i32(8, '\xf8\x00\x00\x00'); // \xf8は範囲ダブらせてstore_i32 * 2 で行っています
+
         }
 
 		void switching(bool flag) {

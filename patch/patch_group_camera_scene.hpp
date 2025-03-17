@@ -22,6 +22,7 @@
 #include "global.hpp"
 #include "offset_address.hpp"
 #include "util.hpp"
+#include "config_rw.hpp"
 
 
 namespace patch {
@@ -34,35 +35,31 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "group_camera_scene";
+
+        static void __cdecl asm_func();
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
-
-            OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x01b056, 6);
-            h.store_i16(0, '\x90\xe8');
-            h.replaceNearJmp(2, cursor);
             /*
                 1001b056 8b5004             mov     edx,dword ptr [eax+04] ; edx = obj->layer_disp
                 1001b059 8b4d10             mov     ecx,dword ptr [ebp+10]
 
                 ↓
+                1001b056 90                 nop
+                1001b057 e8XxXxXxXx         call    cursor
 
-                00000000 8b90c0050000       mov     edx,dword ptr [eax+000005c0] ; ebp = obj->layer_setting
-                00000000 8b4d10             mov     ecx,dword ptr [ebp+10]
+                10000000 8b90c0050000       mov     edx,dword ptr [eax+000005c0] ; ebp = obj->layer_setting
+                10000000 8b4d10             mov     ecx,dword ptr [ebp+10]
+                10000000 c3
             */
 
-            static const char code_put[] =
-                "\x8b\x90\xc0\x05\x00\x00" // mov     edx,dword ptr [eax+000005c0]
-                "\x8b\x4d\x10"             // mov     ecx,dword ptr [ebp+10]
-                "\xc3"                     // ret
-                ;
-
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
-            cursor += sizeof(code_put) - 1;
+            OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x01b056, 6);
+            h.store_i16(0, '\x90\xe8');
+            h.replaceNearJmp(2, &asm_func);
         }
 
         void switching(bool flag) {

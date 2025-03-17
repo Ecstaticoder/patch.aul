@@ -47,6 +47,9 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "obj_glow";
+
+        static void __cdecl asm_func();
+
     public:
 
         struct efGlow_var { // 1b2010
@@ -73,11 +76,9 @@ namespace patch {
 
             { // オフセットアドレス exedit + 55625 の修正
 
-                auto& cursor = GLOBAL::executable_memory_cursor;
-
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x054ed5, 6);
                 h.store_i16(0, '\x90\xe8');
-                h.replaceNearJmp(2, cursor);
+                h.replaceNearJmp(2, asm_func);
                 /*
                     10054ed5 8b4908             mov     ecx,dword ptr [ecx+08]
                     10054ed8 c1e10c             shl     ecx,0c
@@ -86,9 +87,7 @@ namespace patch {
                     10054ed6 e8xXxXxXxX         call    &executable_memory_cursor
 
                     ; しきい値 track[2] が0未満の時に0にする
-                */
 
-                static const char code_put[] =
                     "\x8b\x49\x08"             // mov     ecx,dword ptr [ecx+08]
                     "\x85\xc9"                 // test    ecx,ecx
                     "\x7c\x04"                 // jl      skip,4
@@ -96,10 +95,7 @@ namespace patch {
                     "\xc3"                     // ret
                     "\x33\xc9"                 // xor     ecx,ecx
                     "\xc3"                     // ret
-                    ;
-
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                cursor += sizeof(code_put) - 1;
+                */
             }
 
 #ifdef PATCH_SWITCH_SMALL_FILTER

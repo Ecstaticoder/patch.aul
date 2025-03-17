@@ -41,12 +41,20 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "failed_file_drop";
+
+        inline static struct _ofs {
+            int32_t x43b4c = 0x43b4c;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
     public:
         
         void init() {
             enabled_i = enabled;
-
+            
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             {
                 /*
@@ -69,10 +77,8 @@ namespace patch {
                 h.replaceNearJmp(2, &lstrcmpiA_wrap3c235);
             }
             {
-                auto& cursor = GLOBAL::executable_memory_cursor;
-
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x03c454, 4);
-                h.replaceNearJmp(0, cursor);
+                h.replaceNearJmp(0, &asm_func);
                 /*
                      1003c452 0f84f4760000        jz      10043b4c
                      ↓
@@ -83,17 +89,9 @@ namespace patch {
                     "\x8d\x8c\x24\xd0\x00\x00\x00"//  lea     ecx,dword ptr [esp+000000d0]
                     "\x51"                        //  push    ecx
                     "\xe8XXXX"                    //  call    MessageBoxA_drop
-                    "\xe9"                        //  jmp     10043b4c
+                    "\xe9"                        //  jmp     ee+43b4c
                     ;
                 */
-
-                store_i32(cursor, '\x8d\x8c\x24\xd0'); cursor += 4;
-                store_i32(cursor, '\x00\x00\x00\x51'); cursor += 4;
-                store_i8(cursor, '\xe8'); cursor++;
-                store_i32(cursor, (int)&MessageBoxA_drop - (int)cursor - 4); cursor += 4;
-                store_i8(cursor, '\xe9'); cursor++;
-                store_i32(cursor, GLOBAL::exedit_base + 0x043b4c - (int)cursor - 4); cursor += 4;
-
             }
         }
 

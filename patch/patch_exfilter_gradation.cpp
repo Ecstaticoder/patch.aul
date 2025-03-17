@@ -193,5 +193,20 @@ namespace patch::exfilter {
 		efp->aviutl_exfunc->exec_multi_thread_func((AviUtl::MultiThreadFunc)&mt_yca, grd, efpip);
 		return TRUE;
 	}
+	__declspec(naked) void __cdecl Gradation_t::asm_func_apend_form() {
+		__asm {
+			call    apend_form
+			test    eax, eax
+			jnz     jmp_ee_x5922d
+			push    edi
+			mov     eax, dword ptr [ee.x1b2074]
+			mov     eax, dword ptr [eax]
+			push    esi
+			jmp     dword ptr [ee.x59216]
+
+			jmp_ee_x5922d:
+			jmp     dword ptr [ee.x5922d]
+		}
+	}
 } // namespace patch::exfilter
 #endif // ifdef PATCH_SWITCH_EXFILTER_GRADATION

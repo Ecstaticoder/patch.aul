@@ -42,38 +42,36 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "camera_scene";
+
+        inline static struct _ofs {
+            int32_t x13596c = 0x13596c;
+        }ee;
+        static void __cdecl asm_func_camera_mode();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
 
-            {
-                auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
+            { // camera_mode[func_idx]のはずがcamera_mode[0]になっているのを直す
 
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x025575, 5);
                 h.store_i8(0, '\xe8');
-                h.replaceNearJmp(1, cursor);
+                h.replaceNearJmp(1, &asm_func_camera_mode);
 
                 /*
                 10025575 a36c591310        mov   [camera_mode],eax
                 ↓
                 10025575 e8XxXxXxXx        call  cursor
 
-                10000000 8bbe1c010000      mov   edi,dword ptr [esi+0000011c]
+                10000000 8bbe1c010000      mov   edi, dword ptr [esi+0000011c]
                 10000000 8904bdXxXxXxXx    mov   dword ptr [edi*4+camera_mode],eax
                 10000000 c3                ret
                 */
-
-                static const char code_put[] =
-                    "\x8b\xbe\x1c\x01\x00\x00" // mov   edi,dword ptr [esi+0000011c]
-                    "\x89\x04\xbdXXXX"         // mov   dword ptr [edi*4+camera_mode],eax
-                    "\xc3"                     // ret
-                    ;
-
-                memcpy(cursor, code_put, sizeof(code_put) - 1);
-                store_i32(cursor + 9, GLOBAL::exedit_base + OFS::ExEdit::camera_mode);
-                cursor += sizeof(code_put) - 1;
             }
 
             {

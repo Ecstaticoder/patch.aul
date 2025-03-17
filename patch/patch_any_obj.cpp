@@ -396,6 +396,20 @@ namespace patch {
         return ret;
     }
 
+
+
+    int __cdecl any_obj_t::disp_param_dialog_wrap(HINSTANCE hinst, LPCSTR name, HWND hwnd, DLGPROC* dlgproc) {
+        int okcancel = reinterpret_cast<int(__cdecl*)(HINSTANCE, LPCSTR, HWND, DLGPROC*)>(GLOBAL::exedit_base + 0x20800)(hinst, name, hwnd, dlgproc);
+        // OK == 1, CANCEL == 2
+        script_dlg_ok_cancel = 2 - okcancel;
+        return okcancel;
+    }
+    BOOL __cdecl any_obj_t::disp_color_dialog_wrap(ExEdit::Filter* efp, void* current_color, int flag) {
+        return script_dlg_ok_cancel = efp->exfunc->x6c(efp, current_color, flag);
+    }
+    BOOL __cdecl any_obj_t::dlg_get_load_name_wrap(LPSTR name, LPSTR filter, LPSTR def) {
+        return script_dlg_ok_cancel = reinterpret_cast<BOOL(__cdecl*)(LPSTR, LPSTR, LPSTR)>(GLOBAL::exedit_base + OFS::ExEdit::dlg_get_load_name)(name, filter, def);
+    }
     
     BOOL __cdecl any_obj_t::update_script_param_wrap(ExEdit::Filter* efp, char* name, char* valuestr) {
         if (!reinterpret_cast<BOOL(__cdecl*)(ExEdit::Filter*, char*, char*)>(GLOBAL::exedit_base + 0x2300)(efp, name, valuestr)) return FALSE;
@@ -634,6 +648,98 @@ namespace patch {
             }
         }
     }
+
+
+
+    __declspec(naked) void __cdecl any_obj_t::asm_func_count_section_num_wrap() {
+        __asm {
+            push    esi
+            call    count_section_num_wrap
+            cmp     eax, 0x01
+            jnz     jmp_ee_x8f0e6
+            mov     edx, dword ptr [esi + 0x000000f4]
+            jmp     dword ptr [ee.x8f09c]
+
+            jmp_ee_x8f0e6:
+            jmp     dword ptr [ee.x8f0e6]
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_figure_file_cancel() {
+        __asm {
+            call    dword ptr[ee.x20900]
+            test    eax, eax
+            jnz     jmp_ee_x745fd
+            add     esp, 0x0C
+            call    deselect_object_if
+            jmp     dword ptr[ee.x74614]
+
+            jmp_ee_x745fd:
+            jmp     dword ptr[ee.x745fd]
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_mask_file_cancel() {
+        __asm {
+            call    dword ptr[ee.x20900]
+            test    eax, eax
+            jnz     jmp_ee_x69ef3
+            call    deselect_object_if
+            jmp     dword ptr[ee.x69eff]
+
+            jmp_ee_x69ef3:
+            jmp     dword ptr[ee.x69ef3]
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_portionfilter_file_cancel() {
+        __asm {
+            call    dword ptr[ee.x20900]
+            test    eax, eax
+            jnz     jmp_ee_x6e313
+            add     esp, 0x0C
+            call    deselect_object_if
+            jmp     dword ptr[ee.x6e2e0]
+
+            jmp_ee_x6e313:
+            jmp     dword ptr[ee.x6e313]
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_displacementmap_file_cancel() {
+        __asm {
+            call    dword ptr[ee.x20900]
+            test    eax, eax
+            jnz     jmp_ee_x201a1
+            add     esp, 0x0C
+            call    deselect_object_if
+            jmp     dword ptr[ee.x201b4]
+
+            jmp_ee_x201a1:
+            jmp     dword ptr[ee.x201a1]
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_mov_status_1_specialcolorconv() {
+        __asm {
+            push    eax
+            push    edi
+            call    mov_status_1_specialcolorconv
+            pop     eax
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_wrap_2cfbe() {
+        __asm {
+            sub     eax, 0x00000101
+            jz      skip
+                cmp     eax, 0x04
+            skip:
+            ret
+        }
+    }
+    __declspec(naked) void __cdecl any_obj_t::asm_func_post_deselect_object_tl_activate() {
+        __asm {
+            call    post_deselect_object_tl_activate
+            jmp     dword ptr [ee.x43b4c]
+        }
+    }
+
 
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_ANY_OBJ

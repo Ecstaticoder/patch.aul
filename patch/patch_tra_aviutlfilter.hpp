@@ -15,13 +15,13 @@
 #include "macro.h"
 
 #ifdef PATCH_SWITCH_TRA_AVIUTL_FILTER
-#include <memory>
 
 #include <exedit.hpp>
 
 #include "global.hpp"
 #include "offset_address.hpp"
 #include "util.hpp"
+#include "config_rw.hpp"
 
 namespace patch {
 
@@ -31,17 +31,25 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "tra_aviutlfilter";
+
+        inline static struct _ofs {
+            int32_t x6578d = 0x6578d;
+            int32_t x65789 = 0x65789;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 	public:
 		void init() {
             enabled_i = enabled;
 
 			if (!enabled_i)return;
 
-			auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x06577a, 6);
             h.store_i16(0, '\x90\xe9');
-            h.store_i32(2, cursor - (GLOBAL::exedit_base + 0x065780));
+            h.replaceNearJmp(2, &asm_func);
             /*
                 1006577a 8b91d0000000  mov     edx,dword ptr [ecx+000000d0] ; filter_param_ptr->track_link
                 10065780 8b89cc000000  mov     ecx,dword ptr [ecx+000000cc] ; filter_param_ptr->track_scale
@@ -56,12 +64,6 @@ namespace patch {
                 ↓
                 1006577a 90e9XXXXXXXX  jmp     executable_memory_cursor
 
-                    ; 拡張編集以外のフィルタの場合は
-                    ; filter_param_ptr->track_link の部分を 0 に
-                    ; filter_param_ptr->track_scale[eax] の部分を 1 に
-            */
-
-            static const char code_put[] =
                 "\x03\xc3"          // add     eax, ebx
                 "\x50"              // push    eax
                 "\x8a\x51\x03"      // mov     dl,[ecx + 03]
@@ -77,14 +79,10 @@ namespace patch {
                 "\x52"              // push    edx
                 "\x42"              // inc     edx
                 "\xe9XXXX"          // jmp     exedit_base + 6578d
-                ;
-
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
-
-            store_i32(cursor + 27, GLOBAL::exedit_base + 0x065789 - (uint32_t)(cursor + 31));
-
-            cursor += sizeof(code_put) - 1;
-            store_i32(cursor - 4, GLOBAL::exedit_base + 0x06578d - (uint32_t)cursor);
+                    ; 拡張編集以外のフィルタの場合は
+                    ; filter_param_ptr->track_link の部分を 0 に
+                    ; filter_param_ptr->track_scale[eax] の部分を 1 に
+            */
 		}
         
         void switching(bool flag) {

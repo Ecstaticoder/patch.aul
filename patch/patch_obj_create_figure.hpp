@@ -41,7 +41,11 @@ namespace patch {
 		bool enabled_i;
 		inline static const char key[] = "obj_create_figure";
 
+		static void __cdecl asm_maskblur_func();
+
 	public:
+
+		static int __cdecl asm_aspect_func();
 
 		void init() {
 			enabled_i = enabled;
@@ -65,25 +69,14 @@ namespace patch {
 					10000000 b8d34d6210         mov     eax,10624dd3
 					10000000 c3                 ret
 				*/
-				auto& cursor = GLOBAL::executable_memory_cursor;
-
-				static const char code_put[] = {
-					"\x85\xc9"                 // test    ecx,ecx
-					"\x7d\x02"                 // jnl     skip,02
-					"\x33\xc9"                 // xor     ecx,ecx
-					"\xb8\xd3\x4d\x62\x10"     // mov     eax,10624dd3
-					"\xc3"                     // ret
-				};
 
 				constexpr int vp_begin = 0x734eb;
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x73511 - vp_begin);
 				h.store_i8(0x734eb - vp_begin, '\xe8');
-				h.replaceNearJmp(0x734ec - vp_begin, cursor);
+				h.replaceNearJmp(0x734ec - vp_begin, &asm_aspect_func);
 				h.store_i32(0x7350a - vp_begin, '\x2b\xcb\xe8\x00');
-				h.replaceNearJmp(0x7350d - vp_begin, cursor);
+				h.replaceNearJmp(0x7350d - vp_begin, &asm_aspect_func);
 
-				memcpy(cursor, code_put, sizeof(code_put) - 1);
-				cursor += sizeof(code_put) - 1;
 			}
 
 			{ // マスク・ディスプレイスメントマップのぼかしがマイナスの時にぼかし処理が行われないように変更
@@ -91,10 +84,9 @@ namespace patch {
 			}
 
 			{ // マスクサイズが偶数で、ぼかしサイズが大きい時に描画がおかしいことがあったのを修正
-				auto& cursor = GLOBAL::executable_memory_cursor;
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x068b31, 7);
 				h.store_i32(0, '\x66\x90\xe8\x00');
-				h.replaceNearJmp(3, cursor);
+				h.replaceNearJmp(3, &asm_maskblur_func);
 				/*
 				10068b31 89542444       mov     dword ptr [esp+44],edx
 				10068b35 8d1c4a         mov     ebx,edx+ecx*2
@@ -110,12 +102,6 @@ namespace patch {
 				10000000 4d             dec     ebp
 				10000000 c3             ret
 				*/
-
-				store_i32(cursor, '\x4a\x89\x54\x24');
-				store_i32(cursor + 4, '\x48\x42\x8d\x1c');
-				store_i32(cursor + 7, '\x1c\x4a\x4d\xc3');
-
-				cursor += 11;
 			}
 
 #ifdef PATCH_SWITCH_SMALL_FILTER

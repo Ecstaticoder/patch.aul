@@ -22,7 +22,7 @@
 #include "global_minimum.hpp"
 
 namespace GLOBAL {
-	inline HMODULE exedit_hmod;
+	inline HMODULE exedit_hmod = nullptr;
 	inline uint32_t& exedit_base = (uint32_t&)exedit_hmod;
 	inline std::byte executable_memory[USN_PAGE_SIZE * 16];
 	inline std::byte* executable_memory_cursor = executable_memory;

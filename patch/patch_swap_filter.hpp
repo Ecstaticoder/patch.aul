@@ -39,6 +39,8 @@ namespace patch {
 
         inline static const char key[] = "swap_filter";
 
+        static void __cdecl asm_func();
+
     public:
 
         void init() {
@@ -67,17 +69,10 @@ namespace patch {
                     10000000 59                 pop     ecx
                     10000000 c3
                 */
-                auto& cursor = GLOBAL::executable_memory_cursor;
                 constexpr int vp_begin = 0x33b69;
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x33b6f - vp_begin);
                 h.store_i16(0x33b69 - vp_begin, '\x90\xe8');
-                h.replaceNearJmp(0x33b6b - vp_begin, cursor);
-
-                store_i32(cursor, '\x85\xc0\x7c\x02'); cursor += 4;
-                store_i32(cursor, '\x8b\xf8\x51\x56'); cursor += 4;
-                store_i32(cursor, '\x55\x57\xe8\x00'); cursor += 3;
-                store_i32(cursor, (int)prev_swap - (int)cursor - 4); cursor += 4;
-                store_i32(cursor, '\x59\xc3'); cursor += 2;
+                h.replaceNearJmp(0x33b6b - vp_begin, &asm_func);
             }
         }
         void switching(bool flag) {

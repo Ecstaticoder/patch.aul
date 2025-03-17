@@ -22,6 +22,8 @@
 
 #include "config_rw.hpp"
 
+#include <mmreg.h>
+
 namespace patch {
 
     // init at patch load
@@ -41,34 +43,35 @@ namespace patch {
         0xFFFE	WAVE_FORMAT_EXTENSIBLE	→ subformatから判定
     */
     
-    inline static const short ng_wave_format[] = { 3,0x38,0x40 };
+    inline static const short ng_wave_format[] = {
+        WAVE_FORMAT_IEEE_FLOAT,
+        WAVE_FORMAT_NMS_VBXADPCM,
+        WAVE_FORMAT_G721_ADPCM
+    };
+    constexpr int _ng_wave_n = sizeof(ng_wave_format) / sizeof(*ng_wave_format); // インラインアセンブリではさらにenumにする必要あり
 
     inline class wave_file_reader_t {
-
-        /*
-        static int* __cdecl wave_func_open(char* file) {
-            auto ih = reinterpret_cast<int*(__cdecl*)(char*)>(GLOBAL::aviutl_base + 0x28bd0)(file);
-            
-            if(ih!=NULL){
-                for (int i = 0; i < 10; i++) {
-                    printf("%08x", ih[i]);
-                }
-                printf("\n");
-                memset(ih + 8, 0, 2);
-            }
-            return ih;
-        }*/
-        //OverWriteOnProtectHelper(GLOBAL::aviutl_base + 0x07cf98, 4).store_i32(0, &wave_func_open);
-        
 
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "wave_file_reader";
+
+
+        inline static struct _ofs {
+            int32_t x28ca8 = 0x28ca8;
+            int32_t x28d9d = 0x28d9d;
+        }au;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::aviutl_base, &au, sizeof(au));
+
     public:
         void init() {
             enabled_i = enabled;
             
             if (!enabled_i)return;
+
+            add_base(GLOBAL::aviutl_base, &au, sizeof(au));
+
             /*
                 00428ca3 8b0e               mov     ecx,dword ptr [esi]
                 00428ca5 8d45e0             lea     eax,dword ptr [ebp-20]
@@ -96,36 +99,10 @@ namespace patch {
                 10000000 e9XxXxXxXx         jmp     aviutl + 28ca8
 
             */
-            auto& cursor = GLOBAL::executable_memory_cursor;
             
             OverWriteOnProtectHelper h(GLOBAL::aviutl_base + 0x028ca3, 5);
             h.store_i8(0, '\xe9');
-            h.replaceNearJmp(1, cursor);
-
-            static const char code_put[] =
-                "\x0f\xb7\x4e\x10"         // movzx   ecx,dword ptr [esi+10] ; format_code
-                "\x81\xf9\xfe\xff\x00\x00" // cmp     ecx,0000fffe ; WAVE_FORMAT_EXTENSIBLE
-                "\x75\x0e"                 // jnz     skip,+0e
-                "\x0f\xb7\x4e\x28"         // movzx   ecx,dword ptr [esi+28] ; subformat_code
-                "\x66\x89\x4e\x10"         // mov     [esi+10],cx
-                "\x66\xc7\x46\x20\x00\x00" // mov     word ptr [esi+20],0000
-                "\xba"                     // mov     edx, &ng_wave
-                ;
-
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
-            cursor += sizeof(code_put) - 1;
-
-            store_i32(cursor, &ng_wave_format); cursor += 4;
-            store_i32(cursor, '\x33\xc0\x66\x8b'); cursor += 4;
-            store_i8(cursor, '\x02'); cursor++;
-            store_i32(cursor, '\x3b\xc8\x0f\x84'); cursor += 4;
-            store_i32(cursor, GLOBAL::aviutl_base + 0x28d9d - (int)cursor - 4); cursor += 4;
-            store_i32(cursor, '\x83\xc2\x02\x81'); cursor += 4;
-            store_i8(cursor, '\xfa'); cursor++;
-            store_i32(cursor, (int)&ng_wave_format + sizeof(ng_wave_format)); cursor += 4;
-            store_i32(cursor, '\x7c\xea\x8b\x0e'); cursor += 4;
-            store_i32(cursor, '\x8d\x45\xe0\xe9'); cursor += 4;
-            store_i32(cursor, GLOBAL::aviutl_base + 0x28ca8 - (int)cursor - 4); cursor += 4;
+            h.replaceNearJmp(1, &asm_func);
         }
 
         void switching(bool flag) {

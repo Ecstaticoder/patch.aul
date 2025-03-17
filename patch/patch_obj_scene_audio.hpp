@@ -37,6 +37,9 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "obj_scene_audio";
+
+        static void __cdecl asm_func();
+
     public:
 
 
@@ -44,8 +47,6 @@ namespace patch {
             enabled_i = enabled;
 
             if (!enabled_i)return;
-
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
             /*
                 10083ed5 8b4104             mov     eax,dword ptr [ecx+04]
@@ -62,12 +63,7 @@ namespace patch {
             */
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x83ed5, 5);
             h.store_i8(0, '\xe8');
-            h.replaceNearJmp(1, cursor);
-
-            store_i32(cursor, '\x8b\x44\x24\x34'); cursor += 4;
-            store_i32(cursor, '\x8b\x00\x89\x44'); cursor += 4;
-            store_i32(cursor, '\x24\x14\x8b\x41'); cursor += 4;
-            store_i32(cursor, '\x04\x8b\x0a\xc3'); cursor += 4;
+            h.replaceNearJmp(1, &asm_func);
         }
 
         void switching(bool flag) {

@@ -241,3 +241,13 @@ inline CPUCmdSet get_CPUCmdSet() {
     inited = true;
     return ret;
 }
+
+
+
+inline void add_base(uint32_t base, void* list, size_t sizeoflist) {
+    uint32_t* ptr = reinterpret_cast<decltype(ptr)>(list);
+    for (int i = sizeoflist >> 2; 0 < i; i--) {
+        *ptr += base;
+        ptr++;
+    }
+}

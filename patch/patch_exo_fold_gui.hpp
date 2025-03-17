@@ -21,6 +21,7 @@
 
 #include "global.hpp"
 #include "util.hpp"
+#include "config_rw.hpp"
 
 namespace patch {
 
@@ -34,28 +35,35 @@ namespace patch {
         inline static const char fold_gui_write[] = "_fold_gui=%d\r\n";
         inline static const char fold_gui_read[] = "_fold_gui";
 
+        inline static struct _ofs {
+            int32_t x288b7 = 0x288b7;
+            int32_t x288c6 = 0x288c6;
+            int32_t x918ab = 0x918ab;
+            int32_t x29b26 = 0x29b26;
+        }ee;
+        static void __cdecl asm_func_write();
+        static void __cdecl asm_func_read();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             { // exo_write
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x0288b1, 5);
                 h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
+                h.replaceNearJmp(1, &asm_func_write);
                 /*
                     100288b1 2401               and     al,01
                     100288b3 84c0               test    al,al
                     100288b5 750f               jnz     100288c6
                     ↓
-                    100288b1 e9XxXxXxXx         jmp     executable_memory_cursor
+                    100288b1 e9XxXxXxXx         jmp     asm_func
 
-                */
-
-                static const char code_put_write[] =
                     "\x8b\xc8"                 // mov     ecx,eax
                     "\x50"                     // push    eax
                     "\x83\xe1\x07"             // and     ecx,07
@@ -74,28 +82,19 @@ namespace patch {
                     "\x84\xc0"                 // test    al,al
                     "\x0f\x84XXXX"             // jz      exedit + 0x288b7
                     "\xe9"// & XXXX            // jmp     exedit + 0x288c6
-                    ;
-
-                memcpy(cursor, code_put_write, sizeof(code_put_write) - 1);
-                store_i32(cursor + 18, &fold_gui_write);
-                cursor += sizeof(code_put_write) - 1 + 4;
-                store_i32(cursor - 9, GLOBAL::exedit_base + 0x0288b7 - ((int)cursor - 5));
-                store_i32(cursor - 4, GLOBAL::exedit_base + 0x0288c6 - (int)cursor);
+                */
             }
 
             { // exo_read
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x029b21, 5);
                 h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
+                h.replaceNearJmp(1, asm_func_read);
                 /*
                     10029b21 8b542414           mov     edx,dword ptr [esp+14]
                     10029b25 52                 push    edx
                     ↓
-                    100288b1 e9XxXxXxXx         jmp     executable_memory_cursor
+                    100288b1 e9XxXxXxXx         jmp     asm_func
 
-                */
-
-                static const char code_put_read[] =
                     "\xff\x74\x24\x14"         // push    dword ptr [esp+14]
                     "\x68XXXX"                 // push    "_fold_gui"
                     "\xff\xd6"                 // call    esi
@@ -114,13 +113,7 @@ namespace patch {
                     "\x30\x41\x72"             // xor     byte ptr [ecx+72],al
                     "\xff\x74\x24\x14"         // push    dword ptr [esp+14]
                     "\xe9"// & XXXX            // jmp     exedit + 0x29b26
-                    ;
-
-                memcpy(cursor, code_put_read, sizeof(code_put_read) - 1);
-                store_i32(cursor + 5, &fold_gui_read);
-                store_i32(cursor + 17, GLOBAL::exedit_base + 0x0918ab - ((int)cursor + 21));
-                cursor += sizeof(code_put_read) - 1 + 4;
-                store_i32(cursor - 4, GLOBAL::exedit_base + 0x029b26 - (int)cursor);
+                */
             }
 
         }

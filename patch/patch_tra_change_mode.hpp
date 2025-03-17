@@ -34,11 +34,20 @@ namespace patch {
         bool enabled_i;
         inline static const char key[] = "tra_change_mode";
 
+        inline static struct _ofs {
+            int32_t x2c9a0 = 0x2c9a0;
+            int32_t x2c9c4 = 0x2c9c4;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
             { // 移動無しから変更するときに右トラックバーの値を左と同じにする
                 /*
@@ -74,18 +83,9 @@ namespace patch {
                     10000000 c3                 ret
                 */
 
-                auto& cursor = GLOBAL::executable_memory_cursor;
-
                 OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x2c99b, 5);
                 h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
-
-                store_i32(cursor, '\x83\xfb\x05\x0f'); cursor += 4;
-                store_i8(cursor, '\x84'); cursor++;
-                store_i32(cursor, GLOBAL::exedit_base + 0x2c9a0 - (int)cursor - 4); cursor += 4;
-                store_i32(cursor, '\x85\xff\x0f\x84'); cursor += 4;
-                store_i32(cursor, GLOBAL::exedit_base + 0x2c9c4 - (int)cursor - 4); cursor += 4;
-                store_i32(cursor, '\x5f\x5e\x5b\xc3'); cursor += 4;
+                h.replaceNearJmp(1, &asm_func);
             }
             { // 移動量指定から他に変えた時に中間点オブジェクトが正常に同じにならないのも修正
                 /*

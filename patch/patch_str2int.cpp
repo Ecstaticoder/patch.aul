@@ -88,5 +88,18 @@ namespace patch {
         return reinterpret_cast<int(__cdecl*)(char*)>(GLOBAL::exedit_base + 0x91820)(str);
     }
 
+    __declspec(naked) void __cdecl str2int_t::asm_func() {
+        __asm {
+            xor     ecx, ecx
+            xor     edi, edi
+            cmp     al, 0x2D
+            jnz     skip
+                inc     edi
+                inc     edx
+            skip:
+            jmp     dword ptr [ee.x43493]
+        }
+    }
+
 } // namespace patch
 #endif // ifdef PATCH_STR2INT

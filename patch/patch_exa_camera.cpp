@@ -17,11 +17,22 @@
 
 #ifdef PATCH_SWITCH_EXA_CAMERA
 namespace patch {
-	int __cdecl exa_camera_t::get_obj_camera_flag(int object_idx) {
-		if (object_idx < 0) return -1;
-		auto obj = *(ExEdit::Object**)(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
-		if (has_flag(obj[object_idx].flag, ExEdit::Object::Flag::Camera)) return 1;
-		return 0;
+	void __stdcall exa_camera_t::get_obj_camera_flag(void* esp) {
+		*reinterpret_cast<int*>((intptr_t)esp + 0x34) = 0;
+
+		int object_idx = *reinterpret_cast<int*>((intptr_t)esp + 0x54);
+		int camera;
+		if (0 <= object_idx) {
+			auto obj = *(ExEdit::Object**)(GLOBAL::exedit_base + OFS::ExEdit::ObjectArrayPointer);
+			if (has_flag(obj[object_idx].flag, ExEdit::Object::Flag::Camera)) {
+				camera = 1;
+			} else {
+				camera = 0;
+			}
+		} else {
+			camera = -1;
+		}
+		*reinterpret_cast<int*>((intptr_t)esp + 0x38) = camera;
 	}
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_EXA_CAMERA

@@ -31,7 +31,7 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "exa_camera";
-        static int __cdecl get_obj_camera_flag(int object_idx);
+        static void __stdcall get_obj_camera_flag(void* esp);
 
     public:
         void init() {
@@ -39,31 +39,19 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
 
             { // exo_write
-                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x29e26, 5);
-                h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
+                OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x29e05, 6);
+                h.store_i32(0, '\x66\x90\x54\xe8');
+                h.replaceNearJmp(4, &get_obj_camera_flag);
                 /*
-                    10029e26 8bf8               mov     edi,eax
-                    10029e28 83c408             add     esp,+08
+                    10029e05 897c2438           mov     dword ptr [esp+38], edi ; =-1
+                    10029e09 895c2434           mov     dword ptr [esp+34], ebx ; =0
                     ↓
-                    10029e26 e9XxXxXxXx         jmp     cursor
-
-                    10000000 8bf8               mov     edi,eax
-                    10000000 56                 push    esi ; obj_idx
-                    10000000 e8XxXxXxXx         call    newfunc
-                    10000000 8944243c           mov     dword ptr [esp+3c],eax
-                    10000000 83c40c             add     esp,+0c
-                    10000000 e9XxXxXxXx         jmp     ee+29e2b
-
+                    10029e05 6690               nop
+                    10029e07 54                 push    esp
+                    10029e08 e8XxXxXxXx         call    stdcall_func
                 */
-                store_i32(cursor, '\x8b\xf8\x56\xe8'); cursor += 4;
-                store_i32(cursor, (int)&get_obj_camera_flag - (int)cursor - 4); cursor += 4;
-                store_i32(cursor, '\x89\x44\x24\x3c'); cursor += 4;
-                store_i32(cursor, '\x83\xc4\x0c\xe9'); cursor += 4;
-                store_i32(cursor, GLOBAL::exedit_base + 0x29e2b - (int)cursor - 4); cursor += 4;
             }
         }
 

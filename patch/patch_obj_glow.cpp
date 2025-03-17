@@ -96,7 +96,18 @@ namespace patch {
             }
         }
     }
-
+    __declspec(naked) void __cdecl obj_Glow_t::asm_func() {
+        __asm {
+            mov ecx, dword ptr[ecx + 0x08]
+            test ecx, ecx
+            jl skip
+                shl ecx, 0x0c
+                ret
+            skip :
+            xor ecx, ecx
+            ret
+        }
+    }
 
 } // namespace patch
 #endif // ifdef PATCH_SWITCH_OBJ_GLOW

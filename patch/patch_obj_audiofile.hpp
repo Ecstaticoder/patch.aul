@@ -45,12 +45,24 @@ namespace patch {
 
 		inline static double(__cdecl* calc_pos)(ExEdit::ObjectFilterIndex ofi, int milliframe, int video_rate, int video_scale, ExEdit::Filter* efp);
 
+		inline static struct _ofs {
+			int32_t x8fbf8 = 0x8fbf8;
+			int32_t x8fd30 = 0x8fd30;
+			int32_t x8ffb1 = 0x8ffb1;
+		}ee;
+		static void __cdecl asm_func_if_speed_1();
+		static void __cdecl asm_func_if_speed_2();
+		static void __cdecl asm_func_speed_1();
+		static void __cdecl asm_func_speed_2();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 	public:
 
 		void init() {
 			enabled_i = enabled;
 			if (!enabled_i)return;
 
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 			calc_pos = reinterpret_cast<decltype(calc_pos)>(GLOBAL::exedit_base + OFS::ExEdit::efAudioFile_calc_pos);
 
 			{   // 音声ファイルの再生速度トラックの最大値2000.0のはずが800.0となってしまう処理があるのを修正
@@ -89,37 +101,60 @@ namespace patch {
 					efp->track_extra->track_drag_min[1] = -4000;
 				}
 				{ // 逆再生時にオブジェクトの長さ調整機能が正常に動くように
-					auto& cursor = GLOBAL::executable_memory_cursor;
 
 					constexpr int vp_begin = 0x8fd2c;
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x8ffee - vp_begin);
-					h.replaceNearJmp(0x8fd2c - vp_begin, cursor);
-					store_i32(cursor, '\x83\x79\x04\x9c'); cursor += 4;
-					store_i16(cursor, '\x0f\x8f'); cursor += 2;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8fbf8 - (int)cursor - 4); cursor += 4;
-					store_i8(cursor, '\xe9'); cursor++;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8fd30 - (int)cursor - 4); cursor += 4;
+					/*
+						1008fd2a 0f8cc8feffff       jl      1008fbf8
+						↓
+						1008fd2a 0f8cXxXxXxXx       jl      cursor
 
-					h.store_i8(0x8fed8 - vp_begin, '\xe9');
-					h.replaceNearJmp(0x8fed9 - vp_begin, cursor);
+						10000000 8379049c           cmp     dword ptr [ecx + 4], 0x9c ; -100
+						10000000 0f8fXxXxXxXx       jg      ee+8fbf8
+						10000000 e9XxXxXxXx         jmp     ee+8fd30
+					*/
+					h.replaceNearJmp(0x8fd2c - vp_begin, &asm_func_if_speed_1);
+
+					/*
+						1008fed8 db4004             fild    dword ptr [eax+04]
+						1008fedb da4c243c           fimul   dword ptr [esp+3c]
+						↓
+						1008fed8 e8XxXxXxXx         jmp     cursor
+						1008fedd d9e1               fabs
+
+						10000000 db4004             fild    dword ptr [eax + 0x04]
+						10000000 da4c243c           fimul   dword ptr [esp + 0x40]
+						10000000 c3                 ret
+					*/
+					h.store_i8(0x8fed8 - vp_begin, '\xe8');
+					h.replaceNearJmp(0x8fed9 - vp_begin, &asm_func_speed_1);
 					h.store_i16(0x8fedd - vp_begin, '\xd9\xe1');
-					store_i32(cursor, '\xdb\x40\x04\xda'); cursor += 4;
-					store_i32(cursor, '\x4c\x24\x3c\xe9'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8fedd - (int)cursor - 4); cursor += 4;
 
-					h.replaceNearJmp(0x8ffad - vp_begin, cursor);
-					store_i32(cursor, '\x83\x79\x04\x9c'); cursor += 4;
-					store_i16(cursor, '\x0f\x8f'); cursor += 2;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8fbf8 - (int)cursor - 4); cursor += 4;
-					store_i8(cursor, '\xe9'); cursor++;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8ffb1 - (int)cursor - 4); cursor += 4;
+					/*
+						1008ffab 0f8c47fcffff       jl      1008fbf8
+						↓
+						1008ffab 0f8cXxXxXxXx       jl      cursor
 
-					h.store_i8(0x8ffe7 - vp_begin, '\xe9');
-					h.replaceNearJmp(0x8ffe8 - vp_begin, cursor);
+						10000000 8379049c           cmp     dword ptr [ecx + 4], 0x9c ; -100
+						10000000 0f8fXxXxXxXx       jg      ee+8fbf8
+						10000000 e9XxXxXxXx         jmp     ee+8ffb1
+					*/
+					h.replaceNearJmp(0x8ffad - vp_begin, &asm_func_if_speed_2);
+
+					/*
+						1008ffe7 db4104             fild    dword ptr [ecx+04]
+						1008ffea da4c243c           fimul   dword ptr [esp+3c]
+						↓
+						1008ffe7 e8XxXxXxXx         jmp     cursor
+						1008ffec d9e1               fabs
+
+						10000000 db4104             fild    dword ptr [ecx + 0x04]
+						10000000 da4c243c           fimul   dword ptr [esp + 0x40]
+						10000000 c3                 ret
+					*/
+					h.store_i8(0x8ffe7 - vp_begin, '\xe8');
+					h.replaceNearJmp(0x8ffe8 - vp_begin, &asm_func_speed_2);
 					h.store_i16(0x8ffec - vp_begin, '\xd9\xe1');
-					store_i32(cursor, '\xdb\x41\x04\xda'); cursor += 4;
-					store_i32(cursor, '\x4c\x24\x3c\xe9'); cursor += 4;
-					store_i32(cursor, GLOBAL::exedit_base + 0x8ffec - (int)cursor - 4); cursor += 4;
 
 					h.replaceNearJmp(0x8fda0 - vp_begin, &calc_pos_wrap1);
 					h.replaceNearJmp(0x8fdbd - vp_begin, &calc_pos_wrap1);

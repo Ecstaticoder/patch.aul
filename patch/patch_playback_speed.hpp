@@ -34,15 +34,44 @@ namespace patch {
         bool enabled_i;
         inline static const char key[] = "playback_speed";
 
-        inline static BOOL __cdecl calc_length_if(DWORD ret, ExEdit::Filter* efp) {
-            return (((int)efp->processing & 0xffff) - 1 == *reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SettingDialog_ObjIdx));
-        }
+
+        inline static struct _ofs {
+            int32_t x177a10 = 0x177a10; // SettingDialog_ObjIdx
+            int32_t xd7368 = 0xd7368;
+            int32_t x24de58 = 0x24de58;
+            int32_t x230980 = 0x230980;
+            int32_t x2309e0 = 0x2309e0;
+            int32_t x6900 = 0x6900;
+            int32_t x618c = 0x618c;
+            int32_t x902d0 = 0x902d0;
+            int32_t x8fbf8 = 0x8fbf8;
+            int32_t x83770 = 0x83770;
+            int32_t x83cc0 = 0x83cc0;
+            int32_t x83797 = 0x83797;
+            int32_t x84332 = 0x84332;
+            int32_t x848d0 = 0x848d0;
+            int32_t x84359 = 0x84359;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+        static void __cdecl asm_func_calc_length_if();
+        static void __cdecl asm_func_calc_length_movie_file();
+        static void __cdecl asm_func_calc_length_audio_file();
+        static void __cdecl asm_func_calc_length_scene();
+        static void __cdecl asm_func_calc_length_scene_audio();
+        static void __cdecl asm_func_wndproc_undo_movie_file();
+        static void __cdecl asm_func_wndproc_undo_audio_file();
+        static void __cdecl asm_func_wndproc_undo_scene();
+        static void __cdecl asm_func_wndproc_undo_scene_audio();
 
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
+
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
             { // n番目の中間点で再生速度を変化させるとnフレーム遅れて反映されるのを修正
                 { // movie_file
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x005fd9, 1);
@@ -88,41 +117,33 @@ namespace patch {
                 }
             }
             { // 中間点を動かした後に再生速度トラックバーを動かした時にオブジェクトの長さがおかしくなるのを修正
-                auto& cursor = GLOBAL::executable_memory_cursor;
                 int addr[4] = { 0x06900, 0x902d0, 0x83cc0, 0x848d0 };
+                void* asm_func_addr[4] = { &asm_func_calc_length_movie_file, &asm_func_calc_length_audio_file, &asm_func_calc_length_scene, &asm_func_calc_length_scene_audio };
                 byte espsub[4] = { 0x6c, 0x6c, 0x30, 0x30 };
-                int vaddr[4] = { 0x0d7368, 0x24de58, 0x230980, 0x2309e0 };
 
                 for (int i = 0; i < 4; i++) {
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + addr[i], 13);
-                    h.store_i8(0, '\xe9');
-                    h.replaceNearJmp(1, cursor);
+                    h.store_i8(0, '\xe8');
+                    h.replaceNearJmp(1, &asm_func_calc_length_if);
+                    h.store_i8(5, '\xe8');
+                    h.replaceNearJmp(6, asm_func_addr[i]);
                     h.store_i16(10, '\x83\xec');
                     h.store_i8(12, espsub[i]);
-                    store_i8(cursor, '\xe8'); cursor++;
-                    store_i32(cursor, (int)&calc_length_if - (int)cursor - 4); cursor += 4;
-                    store_i32(cursor, '\x85\xc0\x75\x01'); cursor += 4;
-                    store_i32(cursor, '\xc3\xc7\x05\x00'); cursor += 3;
-                    store_i32(cursor, GLOBAL::exedit_base + vaddr[i]); cursor += 4;
-                    store_i32(cursor, 0); cursor += 4;
-                    store_i8(cursor, '\xe9'); cursor++;
-                    store_i32(cursor, GLOBAL::exedit_base + addr[i] + 10 - (int)cursor - 4); cursor += 4;
                 }
                 { // movie_file
                     /*
                         10006900 83ec6c               sub     esp,+6c
                         10006903 c70568730d1000000000 mov     dword ptr [100d7368],00000000
                         ↓
-                        10006900 e9XxXxXxXx           jmp     cursor
-                        10006905 8009231000           error
+                        10006900 e8XxXxXxXx           call    asm_func_calc_length_if
+                        10006905 e8XxXxXxXx           call    asm_func_calc_length
                         1000690a 83ec6c               sub     esp,+6c
 
-                        00000000 e8XxXxXxXx           call    newfunc
-                        00000000 85c0                 test    eax,eax
-                        00000000 7501                 jnz     skip,+1
-                        00000000 c3                   ret
-                        00000000 c705XxXxXxXx00000000 mov     dword ptr [ee+d7368],00000000
-                        00000000 e9XxXxXxXx           jmp     ee+0690a
+                        10006900:
+                        if(LOWORD(efp->processing) - 1 != *reinterpret_cast<int*>(GLOBAL::exedit_base + OFS::ExEdit::SettingDialog_ObjIdx)){
+                            return;
+                        }
+                        1000690a:
                     */
                 }
                 { // audio_file
@@ -130,16 +151,9 @@ namespace patch {
                         100902d0 83ec6c               sub     esp,+6c
                         100902d3 c70558de241000000000 mov     dword ptr [1024de58],00000000
                         ↓
-                        100902d0 e9XxXxXxXx           jmp     cursor
-                        100902d5 8009231000           error
+                        100902d0 e8XxXxXxXx           call    asm_func_calc_length_if
+                        100902d5 e8XxXxXxXx           call    asm_func_calc_length
                         100902da 83ec6c               sub     esp,+6c
-
-                        00000000 e8XxXxXxXx           call    newfunc
-                        00000000 85c0                 test    eax,eax
-                        00000000 7501                 jnz     skip,+1
-                        00000000 c3                   ret
-                        00000000 c705XxXxXxXx00000000 mov     dword ptr [ee+24de58],00000000
-                        00000000 e9XxXxXxXx           jmp     ee+902da
                     */
                 }
                 { // scene
@@ -147,16 +161,9 @@ namespace patch {
                         10083cc0 83ec30               sub     esp,+30
                         10083cc3 c7058009231000000000 mov     dword ptr [10230980],00000000
                         ↓
-                        10083cc0 e9XxXxXxXx           jmp     cursor
-                        10083cc5 8009231000           error
+                        10083cc0 e8XxXxXxXx           call    asm_func_calc_length_if
+                        10083cc5 e8XxXxXxXx           call    asm_func_calc_length
                         10083cca 83ec30               sub     esp,+30
-
-                        00000000 e8XxXxXxXx           call    newfunc
-                        00000000 85c0                 test    eax,eax
-                        00000000 7501                 jnz     skip,+1
-                        00000000 c3                   ret
-                        00000000 c705XxXxXxXx00000000 mov     dword ptr [ee+230980],00000000
-                        00000000 e9XxXxXxXx           jmp     ee+83cca
                     */
                 }
                 { // scene_audio
@@ -164,49 +171,33 @@ namespace patch {
                         100848d0 83ec30               sub     esp,+30
                         100848d3 c705e009231000000000 mov     dword ptr [102309e0],00000000
                         ↓
-                        100848d0 e9XxXxXxXx           jmp     cursor
-                        100848d5 e009231000           error
+                        100848d0 e8XxXxXxXx           call    asm_func_calc_length_if
+                        100848d5 e8XxXxXxXx           call    asm_func_calc_length
                         100848da 83ec30               sub     esp,+30
-
-                        00000000 e8XxXxXxXx           call    newfunc
-                        00000000 85c0                 test    eax,eax
-                        00000000 7501                 jnz     skip,+1
-                        00000000 c3                   ret
-                        00000000 c705XxXxXxXx00000000 mov     dword ptr [ee+2309e0],00000000
-                        00000000 e9XxXxXxXx           jmp     ee+848da
                     */
                 }
             }
             { // オブジェクトの長さを変えて元に戻して再生速度を変えるとオブジェクトの長さがおかしくなるのを修正
-                auto& cursor = GLOBAL::executable_memory_cursor;
 
-                { // movie_file audio_file
-                    /* movie_file
-                        100060d3 0f87b3000000       ja      1000618c
-                        ↓
-                        100060d3 0f87XxXxXxXx       ja      cursor
+                /* movie_file
+                    100060d3 0f87b3000000       ja      1000618c
+                    ↓
+                    100060d3 0f87XxXxXxXx       ja      cursor
 
-                        00000000 83f812             cmp     eax,+12
-                        00000000 750a               jnz     skip,+0a
-                        00000000 57                 push    edi
-                        00000000 56                 push    esi
-                        00000000 e8XxXxXxXx         call    ee+06900
-                        00000000 83c408             add     esp,+08
-                        00000000 e9XxXxXxXx         jmp     ee+0618c
-                    */
-                    int addr[2] = { 0x060d5, 0x8fb3b };
-                    int calcaddr[2] = { 0x06900, 0x902d0 };
-                    int retaddr[2] = { 0x0618c, 0x8fbf8 };
+                    00000000 83f812             cmp     eax,+12
+                    00000000 750a               jnz     skip,+0a
+                    00000000 57                 push    edi
+                    00000000 56                 push    esi
+                    00000000 e8XxXxXxXx         call    ee+06900
+                    00000000 83c408             add     esp,+08
+                    00000000 e9XxXxXxXx         jmp     ee+0618c
+                */
+                // movie_file
+                ReplaceNearJmp(GLOBAL::exedit_base + 0x060d5, &asm_func_wndproc_undo_movie_file);
 
-                    for (int i = 0; i < 2; i++) {
-                        ReplaceNearJmp(GLOBAL::exedit_base + addr[i], cursor);
-                        store_i32(cursor, '\x83\xf8\x12\x75'); cursor += 4;
-                        store_i32(cursor, '\x0a\x57\x56\xe8'); cursor += 4;
-                        store_i32(cursor, GLOBAL::exedit_base + calcaddr[i] - (int)cursor - 4); cursor += 4;
-                        store_i32(cursor, '\x83\xc4\x08\xe9'); cursor += 4;
-                        store_i32(cursor, GLOBAL::exedit_base + retaddr[i] - (int)cursor - 4); cursor += 4;
-                    }
-                }
+                // movie_file
+                ReplaceNearJmp(GLOBAL::exedit_base + 0x8fb3b, &asm_func_wndproc_undo_audio_file);
+
                 { // scene
                     /*
                         1008376b 83f80f             cmp     eax,+0f
@@ -225,15 +216,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8376b, 5);
                     h.store_i8(0, '\xe9');
-                    h.replaceNearJmp(1, cursor);
-                    store_i32(cursor, '\x83\xf8\x0f\x0f'); cursor += 4;
-                    store_i8(cursor, '\x86'); cursor++;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x83770 - (int)cursor - 4); cursor += 4;
-                    store_i32(cursor, '\x83\xf8\x12\x75'); cursor += 4;
-                    store_i32(cursor, '\x0a\x56\xe8\x00'); cursor += 3;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x83cc0 - (int)cursor - 4); cursor += 4;
-                    store_i32(cursor, '\x83\xc4\x04\xe9'); cursor += 4;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x83797 - (int)cursor - 4); cursor += 4;
+                    h.replaceNearJmp(1, &asm_func_wndproc_undo_scene);
                 }
                 { // scene_audio
                     /*
@@ -253,15 +236,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x8432d, 5);
                     h.store_i8(0, '\xe9');
-                    h.replaceNearJmp(1, cursor);
-                    store_i32(cursor, '\x83\xff\x0f\x0f'); cursor += 4;
-                    store_i8(cursor, '\x86'); cursor++;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x84332 - (int)cursor - 4); cursor += 4;
-                    store_i32(cursor, '\x83\xff\x12\x75'); cursor += 4;
-                    store_i32(cursor, '\x0a\x56\xe8\x00'); cursor += 3;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x848d0 - (int)cursor - 4); cursor += 4;
-                    store_i32(cursor, '\x83\xc4\x04\xe9'); cursor += 4;
-                    store_i32(cursor, GLOBAL::exedit_base + 0x84359 - (int)cursor - 4); cursor += 4;
+                    h.replaceNearJmp(1, &asm_func_wndproc_undo_scene_audio);
                 }
             }
         }

@@ -22,7 +22,7 @@
 #include <exedit.hpp>
 
 #include "cryptostring.hpp"
-#include "util_others.hpp"
+#include "util.hpp"
 #include "util_resource.hpp"
 #include "config_rw.hpp"
 
@@ -47,6 +47,14 @@ namespace patch {
         inline static const char key[] = "patch_relative_path";
 
         inline static int filter_idx = 0;
+
+        inline static struct _ofs {
+            int32_t x191c = 0x191c;
+            int32_t x1b50 = 0x1b50;
+        }rp;
+        static void __cdecl asm_func_nulldata();
+        static void __cdecl asm_func_preloop();
+        static void __cdecl asm_func_loopif();
         
     public:
         void init(HMODULE hmod) {
@@ -54,7 +62,9 @@ namespace patch {
             if (!enabled_i)return;
 
             uint32_t& base = (uint32_t&)hmod;
-            auto& cursor = GLOBAL::executable_memory_cursor;
+
+            add_base(base, &rp, sizeof(rp));
+
             { // project_saveの data!=NULL
                 /*
                     64081915 8385c0fdffff01     add     dword ptr [ebp+fffffdc0],+01
@@ -68,15 +78,7 @@ namespace patch {
                 */
                 OverWriteOnProtectHelper h(base + 0x1915, 5);
                 h.store_i8(0, '\xe9');
-                h.replaceNearJmp(1, cursor);
-
-                store_i32(cursor, '\xff\x85\xc0\xfd'); cursor += 4;
-                store_i32(cursor, '\xff\xff\x83\xbd'); cursor += 4;
-                store_i32(cursor, '\xc0\xfd\xff\xff'); cursor += 4;
-                store_i32(cursor, '\x0c\x0f\x8c\x00'); cursor += 3;
-                store_i32(cursor, base + 0x191c - (int)cursor - 4); cursor += 4;
-                store_i8(cursor, '\xe9'); cursor++;
-                store_i32(cursor, base + 0x1b50 - (int)cursor - 4); cursor += 4;
+                h.replaceNearJmp(1, &asm_func_nulldata);
             }
             { //  // project_saveの data==NULL
                 { // ループ前にfilter_idx=0
@@ -92,13 +94,7 @@ namespace patch {
                     */
                     OverWriteOnProtectHelper h(base + 0x1c2f, 6);
                     h.store_i16(0, '\x90\xe8');
-                    h.replaceNearJmp(2, cursor);
-
-                    store_i32(cursor, '\x8b\xb5\x8c\xfd'); cursor += 4;
-                    store_i32(cursor, '\xff\xff\xc7\x05'); cursor += 4;
-                    store_i32(cursor, &filter_idx); cursor += 4;
-                    store_i32(cursor, '\x00\x00\x00\x00'); cursor += 4;
-                    store_i8(cursor, '\xc3'); cursor++;
+                    h.replaceNearJmp(2, &asm_func_preloop);
                 }
                 { // ループ内にfilter_idx++; if(filter_idx==12)break;
                     /*
@@ -126,17 +122,9 @@ namespace patch {
                     constexpr int vp_begin = 0x1cfa;
                     OverWriteOnProtectHelper h(base + vp_begin, 0x1d68 - vp_begin);
                     h.store_i16(0x1cfa - vp_begin, '\x90\xe8');
-                    h.replaceNearJmp(0x1cfc - vp_begin, cursor);
+                    h.replaceNearJmp(0x1cfc - vp_begin, &asm_func_loopif);
                     h.store_i16(0x1d62 - vp_begin, '\x90\xe8');
-                    h.replaceNearJmp(0x1d64 - vp_begin, cursor);
-
-                    store_i16(cursor, '\xff\x05'); cursor += 2;
-                    store_i32(cursor, &filter_idx); cursor += 4;
-                    store_i16(cursor, '\x83\x3d'); cursor += 2;
-                    store_i32(cursor, &filter_idx); cursor += 4;
-                    store_i32(cursor, '\x0c\x74\x06\x8d'); cursor += 4;
-                    store_i32(cursor, '\x46\x0c\x83\xfb'); cursor += 4;
-                    store_i16(cursor, '\xff\xc3'); cursor += 2;
+                    h.replaceNearJmp(0x1d64 - vp_begin, &asm_func_loopif);
                 }
             }
         }

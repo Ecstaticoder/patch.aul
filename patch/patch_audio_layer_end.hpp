@@ -35,6 +35,13 @@ namespace patch {
 
         inline static const char key[] = "audio_layer_end";
 
+        inline static struct _ofs {
+            int32_t x49ebc = 0x49ebc;
+            int32_t x4a008 = 0x4a008;
+        }ee;
+        static void __cdecl asm_func();
+        // add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
     public:
 
         void init() {
@@ -42,7 +49,8 @@ namespace patch {
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
+            add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
             /*
                 10049eb6 0f854c010000       jnz     1004a008
                 ↓
@@ -56,15 +64,7 @@ namespace patch {
             */
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x49eb6, 5);
             h.store_i8(0, '\xe9');
-            h.replaceNearJmp(1, cursor);
-            store_i32(cursor, '\x75\x13\x8b\x8c'); cursor += 4;
-            store_i32(cursor, '\x24\x80\x07\x00'); cursor += 4;
-            store_i32(cursor, '\x00\x3b\x8f\xc0'); cursor += 4;
-            store_i32(cursor, '\x05\x00\x00\x0f'); cursor += 4;
-            store_i8(cursor, '\x8f'); cursor++;
-            store_i32(cursor, GLOBAL::exedit_base + 0x49ebc - (int)cursor - 4); cursor += 4;
-            store_i8(cursor, '\xe9'); cursor++;
-            store_i32(cursor, GLOBAL::exedit_base + 0x4a008 - (int)cursor - 4); cursor += 4;
+            h.replaceNearJmp(1, &asm_func);
 
         }
         void switching(bool flag) {

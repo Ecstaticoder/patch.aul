@@ -19,17 +19,37 @@
 namespace patch {
 
 
-	void __cdecl obj_ImageLoop_t::save_current_image(ExEdit::Filter* efp, ExEdit::FilterProcInfo* efpip) {
-		auto a_exfunc = (AviUtl::ExFunc*)(GLOBAL::aviutl_base + OFS::AviUtl::exfunc);
+	__declspec(naked) void __cdecl obj_ImageLoop_t::asm_func_check_size() {
+		__asm {
+			mov     ecx, dword ptr [esp + 0x08]
+			xor     eax, eax
+			add     ecx, 0x70
+			cmp     dword ptr [ecx + 0x44], eax
+			jng     skip
+			cmp     dword ptr [ecx + 0x48], eax
+			jng     skip
+			sub     esp, 0x0000008c
+			jmp     dword ptr [ee.x5a576]
+
+    		skip:
+			inc     eax
+			ret
+		}
+	}
+
+	// return 0;
+	int __stdcall obj_ImageLoop_t::save_current_image(void* esp) {
+		auto efp = *reinterpret_cast<ExEdit::Filter**>((int)esp + 0xa0);
+		auto efpip = *reinterpret_cast<ExEdit::FilterProcInfo**>((int)esp + 0xa4);
+
 		
 		int obj_h = efpip->obj_h;
 		int smemline = efpip->obj_w * 8;
-		a_exfunc->delete_shared_mem((int)&save_current_image + ExEdit::filter(efp->processing), NULL);
+		efp->aviutl_exfunc->delete_shared_mem((int)&save_current_image + ExEdit::filter(efp->processing), NULL);
 		
-		int* smem = (int*)a_exfunc->create_shared_mem((int)&save_current_image + ExEdit::filter(efp->processing), (int)efp->processing, efpip->obj_h * smemline + 16, NULL);
-		if (smem == NULL) {
-			return;
-		}
+		int* smem = (int*)efp->aviutl_exfunc->create_shared_mem((int)&save_current_image + ExEdit::filter(efp->processing), (int)efp->processing, efpip->obj_h * smemline + 16, NULL);
+		if (smem == NULL) return 0;
+
 		int editline = efpip->obj_line * 8;
 		void* edit = efpip->obj_edit;
 		
@@ -42,6 +62,8 @@ namespace patch {
 			smem = (int*)((int)smem + smemline);
 			edit = (int*)((int)edit + editline);
 		}
+
+		return 0;
 	}
 
 

@@ -499,6 +499,13 @@ namespace patch::fast {
         }
     }
 
+    __declspec(naked) void __cdecl ExtractEdge_t::asm_func_push_no_color_flag() {
+        __asm {
+            mov     edx, dword ptr [esi + 0x64]
+            push    0x00000102
+            jmp     dword ptr[ee.x23b39]
+        }
+    }
 
 } // namespace patch::fast
 #endif // ifdef PATCH_SWITCH_FAST_EXTRACTEDGE

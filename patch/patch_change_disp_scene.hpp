@@ -41,7 +41,12 @@ namespace patch {
 
 		inline static const char key[] = "change_disp_scene";
 
-		inline static int last_id = -1;
+		inline static struct _ofs {
+			int32_t x177a70 = 0x177a70;
+			int32_t x1e0fa0 = 0x1e0fa0;
+		}ee;
+		static void __cdecl asm_func_disp_idx();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
 	public:
 
@@ -49,6 +54,9 @@ namespace patch {
 			enabled_i = enabled;
 
 			if (!enabled_i)return;
+
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 			{ // Shiftを押しながらシーン切り替えをすると範囲選択がされる（システムの設定＞フレーム移動時にSHIFTキーを押している時は範囲選択移動にする の影響）
 			  // 拡張編集のウィンドウキャプションが変わらない
 				/*
@@ -80,23 +88,15 @@ namespace patch {
 
 					10000000 8b82XxXxXxXx       mov     eax,dword ptr [edx+ee+177a70]
 					10000000 3b05XxXxXxXx       cmp     eax,dword ptr [ee+1e0fa0]
-					10000000 7c03               jnl     skip,03
+					10000000 7c03               jl      skip,03
 					10000000 83c8ff             or      eax,0xffffffff
 					10000000 c3                 ret
 
 				*/
-				auto& cursor = GLOBAL::executable_memory_cursor;
 
 				OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x2bddf, 6);
 				h.store_i16(0, '\x90\xe8');
-				h.replaceNearJmp(2, cursor);
-
-				store_i16(cursor, '\x8b\x82'); cursor += 2;
-				store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::SceneSetting + 0x20); cursor += 4;
-				store_i16(cursor, '\x3b\x05'); cursor += 2;
-				store_i32(cursor, GLOBAL::exedit_base + OFS::ExEdit::ObjectAllocNum); cursor += 4;
-				store_i16(cursor, '\x7c\x03'); cursor += 2;
-				store_i32(cursor, '\x83\xc8\xff\xc3'); cursor += 4;
+				h.replaceNearJmp(2, &asm_func_disp_idx);
 			}
 
 

@@ -674,13 +674,14 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 
 	LPCSTR filename = PathFindFileNameA(lpLibFileName);
 	if (lstrcmpiA(filename, "exedit.auf") == 0) {
+		if (GLOBAL::exedit_hmod != nullptr)return ret;
 		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
-		GLOBAL::exedit_hmod = ret;
 		auto filters = reinterpret_cast<AviUtl::GetFilterTableList_t>(GetProcAddress(ret, reinterpret_cast<LPCSTR>(GLOBAL::aviutl_base + OFS::AviUtl::str_GetFilterTableList)))();
 		if (strcmp(filters[0]->information, "拡張編集(exedit) version 0.92 by ＫＥＮくん") != 0) {
 			MessageBoxW(NULL, L"patch.aul requires Exedit version *0.92*.\n拡張編集 version 0.92以外では動作しません．", L"patch.aul", MB_ICONEXCLAMATION);
 			return ret;
 		}
+		GLOBAL::exedit_hmod = ret;
 		original_func_init = std::exchange(filters[0]->func_init, func_initWrap);
 		original_func_WndProc = std::exchange(filters[0]->func_WndProc, func_WndProcWrap);
 #ifdef _DEBUG

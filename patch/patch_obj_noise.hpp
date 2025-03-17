@@ -22,6 +22,7 @@
 #include "global.hpp"
 #include "offset_address.hpp"
 #include "util.hpp"
+#include "config_rw.hpp"
 
 namespace patch {
 
@@ -31,36 +32,31 @@ namespace patch {
         bool enabled = true;
         bool enabled_i;
         inline static const char key[] = "obj_noise";
+
+        static void __cdecl asm_func();
+
     public:
         void init() {
             enabled_i = enabled;
 
             if (!enabled_i)return;
 
-            auto& cursor = GLOBAL::executable_memory_cursor;
-
             OverWriteOnProtectHelper h(GLOBAL::exedit_base + 0x04d8e7, 5);
             h.store_i8(0, '\xe8');
-            h.store_i32(1, cursor - (GLOBAL::exedit_base + 0x04d8ec));
+            h.replaceNearJmp(1, &asm_func);
             /*
                 1004d8e7 2bf0          sub     esi,eax
                 1004d8e9 8b4a08        mov     ecx,dword ptr [edx+8]
                 ↓
                 1004d8e7 e8xXxXxXxX    call    &executable_memory_cursor
 
-                ecx,dword ptr [edx+8]を ecx,dword ptr [edx+ track_id*4]にする
-            */
-
-            static const char code_put[] =
-
                 "\x2b\xf0"          // sub     esi, eax
                 "\x8b\x4c\x24\x4c"  // mov     ecx, dword ptr[esp + 0x4c]
                 "\x8b\x0c\x8a"      // mov     ecx, dword ptr[edx + ecx * 4]
                 "\xc3"              // ret     exedit_base + 0x4d8ec
-                ;
 
-            memcpy(cursor, code_put, sizeof(code_put) - 1);
-            cursor += sizeof(code_put) - 1;
+                ecx,dword ptr [edx+8]を ecx,dword ptr [edx+ track_id*4]にする
+            */
         }
 
         void switching(bool flag) {

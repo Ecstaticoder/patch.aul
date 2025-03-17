@@ -383,5 +383,51 @@ namespace patch::fast {
             e_exfunc->yc2rgb(dst, src, w, h, bitcount, srcline);
         }
     }
+
+
+
+    __declspec(naked) void __cdecl yc_filter_effect_t::asm_func_scene() {
+        __asm {
+            jz      if1
+            push    0x13000003
+            xor     ebx, ebx
+            jmp     dword ptr [ee.x83603]
+        
+            if1:
+            test    dword ptr [ebp], 0x40
+            jz      if2
+            push    0x13000000
+            mov     ebx, 0x00000001
+            jmp     dword ptr[ee.x83603]
+        
+            if2:
+            xor     ebx, ebx
+            jmp     dword ptr [ee.x835fe]
+        }
+    }
+    __declspec(naked) void __cdecl yc_filter_effect_t::asm_func_framebuffer() {
+        __asm {
+            test    eax, eax
+            jnz     jnz_ee_52345
+            or      eax, 0x13000000
+            jmp     dword ptr [ee.x5231c]
+
+            jnz_ee_52345 :
+            jmp     dword ptr [ee.x52345]
+        }
+    }
+
+    __declspec(naked) void __cdecl yc_filter_effect_t::asm_func_clipping() {
+        __asm {
+            mov     eax, 0x13000000
+            test    dword ptr[esi + 0x000000f4], 0xffffffff
+            jnz     skip
+                or al, 0x03
+            skip:
+            push    eax
+            jmp     dword ptr [ee.x14621]
+        }
+    }
+
 } // namespace patch::fast
 #endif // ifdef PATCH_SWITCH_FAST_YC_FILTER_EFFECT

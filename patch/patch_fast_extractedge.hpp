@@ -40,6 +40,12 @@ namespace patch::fast {
 		bool enabled_i;
 		inline static const char key[] = "fast.extractedge";
 
+		inline static struct _ofs {
+			int32_t x23b39 = 0x23b39;
+		}ee;
+		static void __cdecl asm_func_push_no_color_flag();
+		// add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
+
 	public:
 
 		
@@ -55,6 +61,8 @@ namespace patch::fast {
 		void init() {
 			enabled_i = enabled;
 			if (!enabled_i)return;
+
+			add_base(GLOBAL::exedit_base, &ee, sizeof(ee));
 
 			{ // 色指定無しを選べるようにする
 				{ // FilterのExdataUseにno_colorを追加
@@ -78,17 +86,11 @@ namespace patch::fast {
 					10000000 6802010000         push    00000102
 					10000000 e9XxXxXxXx         jmp     ee+23b39
 					*/
-					auto& cursor = GLOBAL::executable_memory_cursor;
 
 					constexpr int vp_begin = 0x23b34;
 					OverWriteOnProtectHelper h(GLOBAL::exedit_base + vp_begin, 0x23b5a - vp_begin);
 					h.store_i8(0, '\xe9');
-					h.replaceNearJmp(1, cursor);
-
-					store_i32(cursor, '\x8b\x56\x64\x68'); cursor += 4;
-					store_i32(cursor, '\x02\x01\x00\x00'); cursor += 4;
-					store_i8(cursor, '\xe9'); cursor++;
-					store_i32(cursor, GLOBAL::exedit_base + 0x23b39 - (int)cursor - 4); cursor += 4;
+					h.replaceNearJmp(1, &asm_func_push_no_color_flag);
 
 					h.replaceNearJmp(0x23b56 - vp_begin, &update_any_exdata_wrap);
 				}
