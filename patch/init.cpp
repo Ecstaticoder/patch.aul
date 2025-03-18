@@ -677,7 +677,7 @@ HMODULE WINAPI init_t::LoadLibraryAWrap(LPCSTR lpLibFileName) {
 		if (GLOBAL::exedit_hmod != nullptr)return ret;
 		if (*reinterpret_cast<int*>(GLOBAL::aviutl_base + OFS::AviUtl::vram_yc_size) == 2)return ret; // YUY2FilterMode
 		auto filters = reinterpret_cast<AviUtl::GetFilterTableList_t>(GetProcAddress(ret, reinterpret_cast<LPCSTR>(GLOBAL::aviutl_base + OFS::AviUtl::str_GetFilterTableList)))();
-		if (strcmp(filters[0]->information, "拡張編集(exedit) version 0.92 by ＫＥＮくん") != 0) {
+		if (strcmp(filters[0]->information, "拡張編集(exedit) version 0.92 by ＫＥＮくん") + strcmp(filters[0]->information, "Advanced Editing version 0.92") != 1) {
 			MessageBoxW(NULL, L"patch.aul requires Exedit version *0.92*.\n拡張編集 version 0.92以外では動作しません．", L"patch.aul", MB_ICONEXCLAMATION);
 			return ret;
 		}
